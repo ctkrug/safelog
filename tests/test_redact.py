@@ -1,3 +1,5 @@
+import time
+
 from safelog.redact import redact_line
 
 
@@ -63,3 +65,14 @@ def test_redacts_ipv6():
 def test_bare_double_colon_is_not_flagged_as_ipv6():
     line = "default route ::\n"
     assert redact_line(line) == line
+
+
+def test_long_at_free_line_does_not_trigger_quadratic_backtracking():
+    # A long run of word characters with no "@" anywhere forces the email
+    # detector's local-part backtracking on every starting offset; an
+    # unbounded quantifier there turns this into O(n^2) and can hang the
+    # process on a single oversized line (e.g. a base64 blob or hex dump).
+    line = "A" * 200_000 + "\n"
+    start = time.monotonic()
+    redact_line(line)
+    assert time.monotonic() - start < 2.0

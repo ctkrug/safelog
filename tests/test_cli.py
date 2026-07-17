@@ -24,3 +24,15 @@ def test_main_redacts_stdin_to_stdout(monkeypatch):
     assert main([]) == 0
     os.close(read_fd)
     assert "[REDACTED:email]" in out.getvalue()
+
+
+def test_main_accepts_mode_flag(monkeypatch):
+    read_fd, write_fd = os.pipe()
+    os.write(write_fd, b"email a@b.com\n")
+    os.close(write_fd)
+    monkeypatch.setattr("sys.stdin", _FdStdin(read_fd))
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdout", out)
+    assert main(["--mode", "mask"]) == 0
+    os.close(read_fd)
+    assert out.getvalue() == "email ***\n"

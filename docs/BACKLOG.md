@@ -27,7 +27,7 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
   - A GitLab personal access token (`glpat-` prefix) is redacted as `[REDACTED:gitlab-token]`.
   - Existing GitHub and Slack detector tests still pass unmodified (no regression).
 
-- [ ] **PEM private key block detection (multi-line)**
+- [x] **PEM private key block detection (multi-line)**
   - A `-----BEGIN ... PRIVATE KEY----- ... -----END ... PRIVATE KEY-----` block spanning multiple
     lines is fully redacted as a single `[REDACTED:private-key]` span, not leaked line-by-line.
   - Detection works when the block arrives split across an arbitrary number of stdin reads (a

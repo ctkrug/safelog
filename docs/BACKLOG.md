@@ -47,7 +47,7 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
     redacted under that name.
   - Running with no config file present falls back to built-in defaults with no error.
 
-- [ ] **Selectable redaction mode**
+- [x] **Selectable redaction mode**
   - `--mode hash` replaces each distinct secret with a stable short hash, so repeated occurrences
     of the same secret show the same token across the stream without revealing it.
   - `--mode mask` replaces every secret with a fixed `***`, with no `[REDACTED:...]` label leaking

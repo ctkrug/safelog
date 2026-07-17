@@ -68,6 +68,6 @@ def load_config(path: str) -> Config:
     try:
         with open(path, encoding="utf-8") as config_file:
             text = config_file.read()
-    except FileNotFoundError:
+    except OSError:
         return EMPTY_CONFIG
     return parse_config(text)

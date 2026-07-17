@@ -23,7 +23,7 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
 
 ## Epic 2 — Detector coverage & configurability
 
-- [ ] **GitLab token detector**
+- [x] **GitLab token detector**
   - A GitLab personal access token (`glpat-` prefix) is redacted as `[REDACTED:gitlab-token]`.
   - Existing GitHub and Slack detector tests still pass unmodified (no regression).
 

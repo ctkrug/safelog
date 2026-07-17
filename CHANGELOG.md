@@ -22,3 +22,6 @@ adheres to [Semantic Versioning](https://semver.org/).
 - `--config` flag and `safelog.toml` support for custom regex patterns and a disabled-detector
   list, via a minimal stdlib-only TOML subset parser.
 - `docs/ARCHITECTURE.md` describing the codebase's module layout and data flow.
+- Shannon-entropy fallback detector (`[REDACTED:high-entropy]`) for secrets with no known vendor
+  shape, running only on spans the regex detectors left untouched. Tunable via
+  `--entropy-threshold`; toggleable via `--disable high-entropy`.

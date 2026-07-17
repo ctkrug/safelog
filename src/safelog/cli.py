@@ -5,7 +5,8 @@ import sys
 
 from .config import load_config
 from .detectors import ALL_DETECTOR_NAMES, DETECTORS
-from .redact import DEFAULT_MODE, MODES, PEM_LABEL, Redactor
+from .entropy import DEFAULT_THRESHOLD as DEFAULT_ENTROPY_THRESHOLD
+from .redact import DEFAULT_MODE, ENTROPY_LABEL, MODES, PEM_LABEL, Redactor
 from .stream import iter_stream_lines
 
 DEFAULT_CONFIG_PATH = "safelog.toml"
@@ -40,6 +41,13 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="PATH",
         help="config file for custom patterns/detector toggles (default: %(default)s)",
     )
+    parser.add_argument(
+        "--entropy-threshold",
+        type=float,
+        default=DEFAULT_ENTROPY_THRESHOLD,
+        metavar="FLOAT",
+        help="Shannon-entropy bits/char required to flag a token as a secret (default: %(default)s)",
+    )
     return parser
 
 
@@ -48,7 +56,9 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
-    listable_names = sorted({*ALL_DETECTOR_NAMES, PEM_LABEL, *(d.name for d in config.custom_detectors)})
+    listable_names = sorted(
+        {*ALL_DETECTOR_NAMES, PEM_LABEL, ENTROPY_LABEL, *(d.name for d in config.custom_detectors)}
+    )
 
     if args.list_detectors:
         for name in listable_names:
@@ -59,8 +69,15 @@ def main(argv=None) -> int:
     detectors = [d for d in DETECTORS if d.name not in disabled]
     detectors += [d for d in config.custom_detectors if d.name not in disabled]
     detect_pem = PEM_LABEL not in disabled
+    detect_entropy = ENTROPY_LABEL not in disabled
 
-    redactor = Redactor(detectors=detectors, mode=args.mode, detect_pem=detect_pem)
+    redactor = Redactor(
+        detectors=detectors,
+        mode=args.mode,
+        detect_pem=detect_pem,
+        detect_entropy=detect_entropy,
+        entropy_threshold=args.entropy_threshold,
+    )
     for line in iter_stream_lines(sys.stdin.fileno()):
         out = redactor.process_line(line)
         if out is not None:

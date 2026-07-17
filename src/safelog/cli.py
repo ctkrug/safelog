@@ -2,12 +2,19 @@
 
 import sys
 
-from .redact import redact_line
+from .redact import Redactor
 from .stream import iter_stream_lines
 
 
 def main(argv=None) -> int:
+    redactor = Redactor()
     for line in iter_stream_lines(sys.stdin.fileno()):
-        sys.stdout.write(redact_line(line))
+        out = redactor.process_line(line)
+        if out is not None:
+            sys.stdout.write(out)
+            sys.stdout.flush()
+    trailing = redactor.flush()
+    if trailing is not None:
+        sys.stdout.write(trailing)
         sys.stdout.flush()
     return 0

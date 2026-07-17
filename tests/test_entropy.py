@@ -44,3 +44,13 @@ def test_threshold_is_tunable():
     borderline = "sk_a8f5f167f44f4964e6c998dee827110c"  # hex-ish, entropy ~3.9
     assert list(find_high_entropy_tokens(borderline, threshold=3.5)) != []
     assert list(find_high_entropy_tokens(borderline, threshold=4.5)) == []
+
+
+def test_token_scoring_exactly_the_threshold_is_flagged():
+    # 32 distinct characters -> exactly 5.0 bits/char; the comparison must
+    # be inclusive (>=) so a token sitting exactly on the threshold still
+    # counts as high-entropy rather than requiring it to clear the bar.
+    token = "abcdefghijklmnopqrstuvwxyzABCDEF"
+    assert shannon_entropy(token) == 5.0
+    matches = list(find_high_entropy_tokens(f"key: {token}", threshold=5.0))
+    assert [m.group(0) for m in matches] == [token]

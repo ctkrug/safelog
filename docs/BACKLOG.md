@@ -38,7 +38,7 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
   - Common non-secret shapes that superficially resemble IPv6 (e.g. `::`) don't trigger false
     positives that mangle normal log lines.
 
-- [ ] **Per-detector enable/disable via CLI flags**
+- [x] **Per-detector enable/disable via CLI flags**
   - `safelog --disable email` leaves email addresses untouched while still redacting other types.
   - `safelog --list-detectors` prints every detector name usable with `--disable`.
 

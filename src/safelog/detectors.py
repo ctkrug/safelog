@@ -64,3 +64,5 @@ DETECTORS = [
         ),
     ),
 ]
+
+ALL_DETECTOR_NAMES = sorted({detector.name for detector in DETECTORS})

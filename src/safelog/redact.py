@@ -96,11 +96,21 @@ class Redactor:
             if PEM_END_RE.search(line):
                 return self._collapse_pem()
             return None
-        if PEM_BEGIN_RE.search(line) and not PEM_END_RE.search(line):
+        begin_match = PEM_BEGIN_RE.search(line)
+        if begin_match:
+            end_match = PEM_END_RE.search(line, begin_match.end())
+            if end_match:
+                return self._finish(self._collapse_inline_pem(line, begin_match, end_match))
             self._in_pem_block = True
             self._pem_buffer = [line]
             return None
         return self._finish(redact_line(line, self.detectors, self.mode))
+
+    def _collapse_inline_pem(self, line: str, begin_match, end_match) -> str:
+        prefix = redact_line(line[: begin_match.start()], self.detectors, self.mode)
+        suffix = redact_line(line[end_match.end() :], self.detectors, self.mode)
+        secret = line[begin_match.start() : end_match.end()]
+        return prefix + format_replacement(self.mode, PEM_LABEL, secret) + suffix
 
     def _finish(self, text: str) -> str:
         if self.detect_entropy:

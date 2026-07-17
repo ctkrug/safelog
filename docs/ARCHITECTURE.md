@@ -7,10 +7,11 @@ A map of the codebase for anyone (human or agent) picking this up cold.
 ```
 src/safelog/
   __main__.py    # `python3 -m safelog` entrypoint, calls cli.main()
-  cli.py         # argparse CLI: --mode, --disable, --list-detectors, --config
+  cli.py         # argparse CLI: --mode, --disable, --list-detectors, --config, --entropy-threshold
   stream.py      # bounded, streaming line reader (iter_stream_lines)
   detectors.py   # regex Detector definitions (AWS, Stripe, GitHub/GitLab, Slack, JWT, email, IP)
-  redact.py      # redact_line() + stateful Redactor (adds PEM block handling, modes)
+  redact.py      # redact_line()/redact_entropy() + stateful Redactor (PEM handling, modes)
+  entropy.py     # Shannon-entropy scorer + high-entropy token finder (regex fallback)
   config.py      # minimal stdlib-only TOML-subset parser for safelog.toml
 ```
 
@@ -22,6 +23,9 @@ stdin fd -> iter_stream_lines() -> Redactor.process_line() -> stdout
                                          v
                               redact_line() over DETECTORS
                               (+ custom detectors from config)
+                                         |
+                                         v
+                         redact_entropy() over what regex left behind
 ```
 
 1. `cli.main()` builds an argparse parser, loads `--config` (or the default
@@ -47,7 +51,13 @@ stdin fd -> iter_stream_lines() -> Redactor.process_line() -> stdout
    `--mode`: `label` (`[REDACTED:<name>]`, default), `mask` (`***`, no
    detector name leaked), or `hash` (a stable 8-char hash of the secret
    value, so repeated occurrences of the same secret show the same token).
-6. At EOF, `cli.main()` calls `Redactor.flush()` so a stream that ends
+6. `redact_entropy()` then scans whatever `redact_line()` left behind for
+   long token-like runs (`entropy.find_high_entropy_tokens()`) and flags any
+   whose Shannon entropy clears `--entropy-threshold`, as
+   `[REDACTED:high-entropy]`. Because it runs *after* regex substitution, an
+   already-redacted span is just a short placeholder — never long enough to
+   be re-flagged. Toggle it off with `--disable high-entropy`.
+7. At EOF, `cli.main()` calls `Redactor.flush()` so a stream that ends
    mid-PEM-block still redacts what it buffered instead of dropping it.
 
 ## Config file

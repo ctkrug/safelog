@@ -43,7 +43,7 @@ def iter_stream_lines(
                 yield buffer[: newline_at + 1]
                 buffer = buffer[newline_at + 1 :]
             elif len(buffer) >= max_line_bytes:
-                yield buffer
-                buffer = ""
+                yield buffer[:max_line_bytes]
+                buffer = buffer[max_line_bytes:]
             else:
                 break

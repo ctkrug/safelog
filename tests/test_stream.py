@@ -55,6 +55,19 @@ def test_long_unterminated_line_is_bounded_into_chunks():
     assert "".join(chunks) == payload.decode()
 
 
+def test_line_exactly_max_line_bytes_long_is_yielded_without_waiting_for_more():
+    # Boundary case: the chunk must be cut the moment the buffer *reaches*
+    # max_line_bytes, not only once it exceeds it, so a line sitting right
+    # on the limit doesn't block waiting for another read that may never
+    # come on a live pipe.
+    read_fd, write_fd = _pipe()
+    gen = iter_stream_lines(read_fd, max_line_bytes=10)
+    os.write(write_fd, b"a" * 10)
+    assert next(gen) == "a" * 10
+    os.close(write_fd)
+    os.close(read_fd)
+
+
 def test_short_lines_are_not_split_by_max_line_bytes():
     read_fd, write_fd = _pipe()
     os.write(write_fd, b"short line\n")

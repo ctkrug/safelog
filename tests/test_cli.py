@@ -100,6 +100,18 @@ def test_config_file_custom_pattern_is_redacted(monkeypatch, tmp_path):
     assert out.getvalue() == "ref [REDACTED:internal-id] filed\n"
 
 
+def test_main_flushes_an_unterminated_pem_block_at_eof(monkeypatch):
+    read_fd, write_fd = os.pipe()
+    os.write(write_fd, b"-----BEGIN RSA PRIVATE KEY-----\nabc123def456\n")
+    os.close(write_fd)
+    monkeypatch.setattr("sys.stdin", _FdStdin(read_fd))
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdout", out)
+    assert main([]) == 0
+    os.close(read_fd)
+    assert out.getvalue() == "[REDACTED:private-key]\n"
+
+
 def test_config_file_disabled_list_is_merged_with_disable_flag(monkeypatch, tmp_path):
     config_path = tmp_path / "safelog.toml"
     config_path.write_text('[detectors]\ndisabled = ["ip"]\n')

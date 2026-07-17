@@ -28,3 +28,15 @@ adheres to [Semantic Versioning](https://semver.org/).
 - `--version` flag.
 - `scripts/benchmark.py`, measuring safelog's added latency vs. a raw pass-through baseline and
   recording it against a stated, checkable budget.
+
+### Fixed
+
+- A private key with `BEGIN`/`END` markers on a single line bypassed the PEM state machine
+  entirely and leaked verbatim instead of collapsing to `[REDACTED:private-key]`.
+- A `safelog.toml` custom pattern that failed to compile as a regex crashed the CLI instead of
+  being skipped like other malformed config lines.
+- `--config` pointing at a directory (or any non-missing-file I/O error) crashed the CLI instead
+  of falling back to defaults.
+- The email detector's unbounded quantifiers caused quadratic-time backtracking on a long line
+  with no `@`, stalling the process on an oversized token or blob; both parts are now bounded to
+  their real-world maximums.

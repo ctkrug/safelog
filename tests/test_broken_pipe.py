@@ -2,6 +2,8 @@ import subprocess
 import sys
 import threading
 
+import safelog.cli as cli
+
 
 def test_early_downstream_close_exits_without_traceback():
     """`safelog | head`-style early close must not dump a BrokenPipeError.
@@ -37,3 +39,24 @@ def test_early_downstream_close_exits_without_traceback():
 
     assert b"Traceback" not in stderr
     assert b"BrokenPipeError" not in stderr
+
+
+class _DummyStdout:
+    def fileno(self):
+        return 1
+
+
+def test_broken_pipe_returns_signalled_exit_code(monkeypatch):
+    """A BrokenPipeError from the write loop yields exit 141 (128+SIGPIPE)."""
+
+    def raise_broken_pipe(_redactor):
+        raise BrokenPipeError
+
+    dup2_calls = []
+    monkeypatch.setattr(cli, "_stream_redacted", raise_broken_pipe)
+    monkeypatch.setattr(cli.os, "open", lambda *args, **kwargs: 999)
+    monkeypatch.setattr(cli.os, "dup2", lambda *args: dup2_calls.append(args))
+    monkeypatch.setattr(cli.sys, "stdout", _DummyStdout())
+
+    assert cli.main([]) == 141
+    assert dup2_calls  # stdout was redirected away from the dead pipe

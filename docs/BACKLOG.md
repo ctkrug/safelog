@@ -80,7 +80,7 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
   - `safelog --help` documents every flag added across this backlog (`--disable`, `--mode`,
     `--entropy-threshold`, `--list-detectors`).
 
-- [ ] **Documented performance benchmark**
+- [x] **Documented performance benchmark**
   - A benchmark script measures added latency per MB piped through safelog vs. raw `cat`, and the
     measured number is recorded in the README or docs.
   - Latency overhead stays under a stated, checkable budget (e.g. <5ms per 1000 lines) on the

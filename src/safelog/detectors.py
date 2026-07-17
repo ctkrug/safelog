@@ -45,7 +45,12 @@ DETECTORS = [
     ),
     Detector(
         "email",
-        re.compile(r"(?P<secret>[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})"),
+        # Local/domain parts are bounded (RFC 5321 caps the local part at 64
+        # octets; real domains never approach 255) so a long run of word
+        # characters with no "@" can't force O(n) backtracking at every
+        # starting offset — unbounded `+` there is a quadratic-time DoS on
+        # an oversized line.
+        re.compile(r"(?P<secret>[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,255}\.[A-Za-z]{2,24})"),
     ),
     Detector(
         "ip",

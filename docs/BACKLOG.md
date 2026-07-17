@@ -75,7 +75,7 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
   - `pip install safelog` installs a working `safelog` console command.
   - The installed package's `--version` output matches `pyproject.toml`'s declared version.
 
-- [ ] **`--version` and `--help` flags**
+- [x] **`--version` and `--help` flags**
   - `safelog --version` prints the package version and exits 0.
   - `safelog --help` documents every flag added across this backlog (`--disable`, `--mode`,
     `--entropy-threshold`, `--list-detectors`).

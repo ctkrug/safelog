@@ -52,6 +52,11 @@ $ cat fixtures/sample.log | python3 -m safelog
   `safelog --list-detectors` prints every name usable with `--disable`.
 - **Config file support** — a `safelog.toml` (or `--config PATH`) can add custom named patterns
   and a list of disabled detectors; no config file present just falls back to the defaults.
+- **Entropy-based fallback detector** catches the long tail regex can't name — generic API keys,
+  passwords, and other high-entropy tokens with no recognizable vendor prefix — by scoring
+  Shannon entropy over token-like substrings. Runs only where a regex detector found nothing, so
+  it never re-flags or corrupts an already-redacted secret. Tune sensitivity with
+  `--entropy-threshold`, or disable it entirely with `--disable high-entropy`.
 - **Zero dependencies.** Stdlib only. Works anywhere Python 3.9+ runs.
 
 ## Usage
@@ -62,6 +67,7 @@ safelog --mode hash                       # stable per-secret hash instead of a 
 safelog --disable email --disable ip      # leave those two detector types untouched
 safelog --list-detectors                  # print every detector name
 safelog --config ./safelog.toml           # load custom patterns / disabled list from a file
+safelog --entropy-threshold 3.5           # lower the bar for flagging high-entropy tokens
 ```
 
 A config file looks like:
@@ -76,9 +82,6 @@ disabled = ["email", "ip"]
 
 ## Planned features
 
-- **Entropy-based fallback detector** for the long tail: high-entropy tokens (generic API keys,
-  passwords, hashes) that don't match a known vendor shape but look like secrets by Shannon
-  entropy over a sliding window.
 - **Packaging to PyPI** so `pip install safelog` works, plus `--version`/`--help` polish and a
   documented performance benchmark.
 

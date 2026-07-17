@@ -36,3 +36,39 @@ def test_main_accepts_mode_flag(monkeypatch):
     assert main(["--mode", "mask"]) == 0
     os.close(read_fd)
     assert out.getvalue() == "email ***\n"
+
+
+def test_disable_flag_leaves_named_detector_untouched(monkeypatch):
+    read_fd, write_fd = os.pipe()
+    os.write(write_fd, b"contact a@b.com from 10.0.0.1\n")
+    os.close(write_fd)
+    monkeypatch.setattr("sys.stdin", _FdStdin(read_fd))
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdout", out)
+    assert main(["--disable", "email"]) == 0
+    os.close(read_fd)
+    result = out.getvalue()
+    assert "a@b.com" in result
+    assert "[REDACTED:ip]" in result
+
+
+def test_disable_flag_is_repeatable(monkeypatch):
+    read_fd, write_fd = os.pipe()
+    os.write(write_fd, b"contact a@b.com from 10.0.0.1\n")
+    os.close(write_fd)
+    monkeypatch.setattr("sys.stdin", _FdStdin(read_fd))
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdout", out)
+    assert main(["--disable", "email", "--disable", "ip"]) == 0
+    os.close(read_fd)
+    assert out.getvalue() == "contact a@b.com from 10.0.0.1\n"
+
+
+def test_list_detectors_prints_every_disable_capable_name(monkeypatch):
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdout", out)
+    assert main(["--list-detectors"]) == 0
+    names = out.getvalue().splitlines()
+    assert "email" in names
+    assert "private-key" in names
+    assert names == sorted(names)

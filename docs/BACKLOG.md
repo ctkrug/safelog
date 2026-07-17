@@ -55,17 +55,17 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
 
 ## Epic 3 — Entropy-based fallback detection
 
-- [ ] **Shannon-entropy scorer for token-like substrings**
+- [x] **Shannon-entropy scorer for token-like substrings**
   - A 32+ char random alphanumeric string with no recognizable vendor prefix is flagged and
     redacted as `[REDACTED:high-entropy]` when no regex detector matches it.
   - Common English words and expected log tokens (UUIDs, file paths) are not flagged at the
     default threshold.
 
-- [ ] **Tunable entropy threshold**
+- [x] **Tunable entropy threshold**
   - `--entropy-threshold <float>` changes sensitivity: a test asserts a borderline string is
     flagged at a low threshold and passed through at a high one.
 
-- [ ] **Entropy detector runs only where regex found nothing**
+- [x] **Entropy detector runs only where regex found nothing**
   - A line containing both a regex-matched secret (e.g. a Stripe key) and adjacent high-entropy
     text doesn't double-flag or corrupt the already-redacted regex match.
 

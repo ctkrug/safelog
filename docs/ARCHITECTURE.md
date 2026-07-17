@@ -75,7 +75,15 @@ missing file is not an error; it returns `EMPTY_CONFIG`.
 cat fixtures/sample.log | python3 -m safelog          # the wow-moment demo
 PYTHONPATH=src python3 -m pytest -q                   # run tests locally (no install needed)
 ruff check .                                          # lint
+PYTHONPATH=src python3 scripts/benchmark.py           # latency-overhead benchmark
 ```
 
 CI (`.github/workflows/ci.yml`) installs the package with `pip install -e ".[dev]"`
 and runs both `ruff check .` and `pytest -q` on Python 3.9 and 3.12.
+
+## Benchmark
+
+`scripts/benchmark.py` measures safelog's added latency over a raw pass-through baseline on a
+mixed secret/plain-line reference log, in ms per 1000 lines, and exits non-zero if it clears
+`BUDGET_MS_PER_1000_LINES`. `tests/test_benchmark.py` runs the same logic on a smaller log with a
+more generous multiplier, as a lightweight CI regression guard rather than a strict perf gate.

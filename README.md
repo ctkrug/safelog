@@ -1,5 +1,7 @@
 # Safelog
 
+[![CI](https://github.com/ctkrug/safelog/actions/workflows/ci.yml/badge.svg)](https://github.com/ctkrug/safelog/actions/workflows/ci.yml)
+
 A zero-dependency streaming filter you pipe logs or terminal output through before an AI agent
 (or a human, or a screen-share) sees them. It redacts API keys, tokens, emails, and IP addresses
 inline, in real time, without buffering the whole stream.

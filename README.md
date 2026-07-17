@@ -30,7 +30,7 @@ levels — passes through untouched.
 $ cat fixtures/sample.log | python3 -m safelog
 2026-07-17T12:00:01Z INFO  starting worker pool=4
 2026-07-17T12:00:02Z ERROR AWS_SECRET_ACCESS_KEY=[REDACTED:aws-secret]
-2026-07-17T12:00:03Z ERROR stripe key sk_live_[REDACTED:stripe-key] rejected
+2026-07-17T12:00:03Z ERROR stripe key sk_test_[REDACTED:stripe-key] rejected
 2026-07-17T12:00:04Z WARN  contact [REDACTED:email] about quota
 2026-07-17T12:00:05Z INFO  client [REDACTED:ip] connected
 ```

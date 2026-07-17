@@ -36,6 +36,10 @@ DETECTORS = [
         re.compile(r"(?P<secret>xox[baprs]-[A-Za-z0-9-]{10,})"),
     ),
     Detector(
+        "gitlab-token",
+        re.compile(r"(?P<secret>glpat-[A-Za-z0-9_-]{20,})"),
+    ),
+    Detector(
         "jwt",
         re.compile(r"(?P<secret>eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)"),
     ),

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "safelog"
-version = "0.1.0"
+version = "1.0.0"
 description = "Zero-dependency streaming filter that redacts secrets from logs and terminal output"
 readme = "README.md"
 requires-python = ">=3.9"

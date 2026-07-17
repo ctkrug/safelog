@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.0] - 2026-07-17
 
 ### Added
 
@@ -28,8 +28,14 @@ adheres to [Semantic Versioning](https://semver.org/).
 - `--version` flag.
 - `scripts/benchmark.py`, measuring safelog's added latency vs. a raw pass-through baseline and
   recording it against a stated, checkable budget.
+- Marketing landing page (`site/index.html`) and its design direction (`docs/DESIGN.md`).
+- dev.to launch article (`docs/launch/devto.md`).
 
 ### Fixed
+
+- An early downstream pipe close (`safelog | head`, quitting a pager, an agent that stopped
+  reading) raised an unhandled `BrokenPipeError` and dumped a traceback with exit 120; safelog now
+  redirects stdout to `/dev/null` and exits 141, like any signalled pipe member.
 
 - A private key with `BEGIN`/`END` markers on a single line bypassed the PEM state machine
   entirely and leaked verbatim instead of collapsing to `[REDACTED:private-key]`.

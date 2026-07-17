@@ -33,7 +33,7 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
   - Detection works when the block arrives split across an arbitrary number of stdin reads (a
     streaming state machine, not a single-line regex).
 
-- [ ] **IPv6 address detection**
+- [x] **IPv6 address detection**
   - A valid IPv6 address (e.g. `2001:db8::1`) is redacted as `[REDACTED:ip]`.
   - Common non-secret shapes that superficially resemble IPv6 (e.g. `::`) don't trigger false
     positives that mangle normal log lines.

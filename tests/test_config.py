@@ -40,3 +40,15 @@ def test_load_config_reads_a_real_file(tmp_path):
     config_path.write_text('[detectors]\ndisabled = ["ip"]\n')
     config = load_config(str(config_path))
     assert config.disabled_detectors == ["ip"]
+
+
+def test_invalid_custom_regex_is_ignored_not_raised():
+    config = parse_config('[patterns]\nbroken = "[unterminated"\n')
+    assert config == EMPTY_CONFIG
+
+
+def test_valid_patterns_still_load_alongside_an_invalid_one():
+    text = '[patterns]\nbroken = "[unterminated"\ngood = "OK-[0-9]+"\n'
+    config = parse_config(text)
+    assert len(config.custom_detectors) == 1
+    assert config.custom_detectors[0].name == "good"

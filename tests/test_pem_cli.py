@@ -26,7 +26,7 @@ def test_cli_collapses_pem_block_to_single_redacted_line(monkeypatch):
     monkeypatch.setattr("sys.stdin", _FdStdin(read_fd))
     out = io.StringIO()
     monkeypatch.setattr("sys.stdout", out)
-    assert main() == 0
+    assert main([]) == 0
     os.close(read_fd)
     result = out.getvalue()
     assert result == "before the key\n[REDACTED:private-key]\nafter the key\n"

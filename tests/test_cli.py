@@ -21,6 +21,6 @@ def test_main_redacts_stdin_to_stdout(monkeypatch):
     monkeypatch.setattr("sys.stdin", _FdStdin(read_fd))
     out = io.StringIO()
     monkeypatch.setattr("sys.stdout", out)
-    assert main() == 0
+    assert main([]) == 0
     os.close(read_fd)
     assert "[REDACTED:email]" in out.getvalue()

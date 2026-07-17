@@ -25,3 +25,6 @@ adheres to [Semantic Versioning](https://semver.org/).
 - Shannon-entropy fallback detector (`[REDACTED:high-entropy]`) for secrets with no known vendor
   shape, running only on spans the regex detectors left untouched. Tunable via
   `--entropy-threshold`; toggleable via `--disable high-entropy`.
+- `--version` flag.
+- `scripts/benchmark.py`, measuring safelog's added latency vs. a raw pass-through baseline and
+  recording it against a stated, checkable budget.

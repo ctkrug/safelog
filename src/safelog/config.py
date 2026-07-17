@@ -51,7 +51,10 @@ def parse_config(text: str) -> Config:
         if section == "patterns":
             kv = _STRING_KV_RE.match(line)
             if kv:
-                pattern = re.compile(f"(?P<secret>{kv.group('value')})")
+                try:
+                    pattern = re.compile(f"(?P<secret>{kv.group('value')})")
+                except re.error:
+                    continue
                 custom_detectors.append(Detector(kv.group("key"), pattern))
         elif section == "detectors":
             kv = _LIST_KV_RE.match(line)

@@ -51,3 +51,15 @@ def test_redacts_gitlab_token():
     out = redact_line(line)
     assert "[REDACTED:gitlab-token]" in out
     assert "A" * 20 not in out
+
+
+def test_redacts_ipv6():
+    line = "client 2001:db8::1 connected\n"
+    out = redact_line(line)
+    assert "[REDACTED:ip]" in out
+    assert "2001:db8::1" not in out
+
+
+def test_bare_double_colon_is_not_flagged_as_ipv6():
+    line = "default route ::\n"
+    assert redact_line(line) == line

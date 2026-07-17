@@ -4,10 +4,13 @@ import hashlib
 import re
 
 from .detectors import DETECTORS
+from .entropy import DEFAULT_THRESHOLD as DEFAULT_ENTROPY_THRESHOLD
+from .entropy import find_high_entropy_tokens
 
 PEM_BEGIN_RE = re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----")
 PEM_END_RE = re.compile(r"-----END [A-Z0-9 ]*PRIVATE KEY-----")
 PEM_LABEL = "private-key"
+ENTROPY_LABEL = "high-entropy"
 
 MODES = ("label", "mask", "hash")
 DEFAULT_MODE = "label"
@@ -38,6 +41,26 @@ def _replacer(name: str, mode: str):
     return replace
 
 
+def redact_entropy(line: str, mode: str = DEFAULT_MODE, threshold: float = DEFAULT_ENTROPY_THRESHOLD) -> str:
+    """Replace high-entropy token-like substrings the regex detectors missed.
+
+    Runs on ``line`` *after* regex substitution, so already-redacted spans
+    are short placeholders (``[REDACTED:x]``, ``***``, a hash) — never long
+    enough to be mistaken for another secret.
+    """
+    matches = list(find_high_entropy_tokens(line, threshold))
+    if not matches:
+        return line
+    pieces = []
+    cursor = 0
+    for match in matches:
+        pieces.append(line[cursor : match.start()])
+        pieces.append(format_replacement(mode, ENTROPY_LABEL, match.group(0)))
+        cursor = match.end()
+    pieces.append(line[cursor:])
+    return "".join(pieces)
+
+
 class Redactor:
     """Stateful, line-at-a-time redactor.
 
@@ -48,17 +71,26 @@ class Redactor:
     number of ``process_line`` calls is still handled correctly.
     """
 
-    def __init__(self, detectors=DETECTORS, mode: str = DEFAULT_MODE, detect_pem: bool = True):
+    def __init__(
+        self,
+        detectors=DETECTORS,
+        mode: str = DEFAULT_MODE,
+        detect_pem: bool = True,
+        detect_entropy: bool = True,
+        entropy_threshold: float = DEFAULT_ENTROPY_THRESHOLD,
+    ):
         self.detectors = detectors
         self.mode = mode
         self.detect_pem = detect_pem
+        self.detect_entropy = detect_entropy
+        self.entropy_threshold = entropy_threshold
         self._in_pem_block = False
         self._pem_buffer = []
 
     def process_line(self, line: str):
         """Return the redacted line, or ``None`` while buffering a PEM block."""
         if not self.detect_pem:
-            return redact_line(line, self.detectors, self.mode)
+            return self._finish(redact_line(line, self.detectors, self.mode))
         if self._in_pem_block:
             self._pem_buffer.append(line)
             if PEM_END_RE.search(line):
@@ -68,7 +100,12 @@ class Redactor:
             self._in_pem_block = True
             self._pem_buffer = [line]
             return None
-        return redact_line(line, self.detectors, self.mode)
+        return self._finish(redact_line(line, self.detectors, self.mode))
+
+    def _finish(self, text: str) -> str:
+        if self.detect_entropy:
+            return redact_entropy(text, self.mode, self.entropy_threshold)
+        return text
 
     def flush(self):
         """Return output for any buffered-but-never-closed PEM block."""

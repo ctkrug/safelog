@@ -80,6 +80,19 @@ internal-id = "INTERNAL-[0-9]{6}"
 disabled = ["email", "ip"]
 ```
 
+## Performance
+
+Safelog is line-oriented and adds only the cost of running its detectors over each line —
+`scripts/benchmark.py` measures that overhead against a raw pass-through baseline on a mixed
+secret/plain-line reference log:
+
+```
+PYTHONPATH=src python3 scripts/benchmark.py
+```
+
+On the reference log it typically measures **60–125ms of added latency per 1000 lines**
+(well under the script's own 200ms/1000-line budget, which it fails the run if exceeded).
+
 ## Planned features
 
 - **Packaging to PyPI** so `pip install safelog` works, plus `--version`/`--help` polish and a

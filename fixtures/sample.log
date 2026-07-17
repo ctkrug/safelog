@@ -1,0 +1,5 @@
+2026-07-17T12:00:01Z INFO  starting worker pool=4
+2026-07-17T12:00:02Z ERROR AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+2026-07-17T12:00:03Z ERROR stripe key sk_test_NOTREALZZZ rejected
+2026-07-17T12:00:04Z WARN  contact jane.doe@example.com about quota
+2026-07-17T12:00:05Z INFO  client 10.0.4.212 connected

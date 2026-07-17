@@ -37,21 +37,50 @@ $ cat fixtures/sample.log | python3 -m safelog
 2026-07-17T12:00:05Z INFO  client [REDACTED:ip] connected
 ```
 
+## Features
+
+- **Streaming, not batch.** Reads stdin line-by-line, falling back to bounded chunks for lines
+  without a trailing newline, and writes as it goes — safe to sit inline in a live `|` pipe with
+  flat memory use regardless of stream length.
+- **Regex detectors** for well-known secret shapes: AWS keys, GitHub/GitLab tokens, Stripe keys,
+  Slack tokens, private key blocks (`-----BEGIN ... PRIVATE KEY-----`, collapsed across however
+  many lines they span), JWTs, emails, IPv4/IPv6.
+- **Configurable redaction modes** — `--mode label` (default, `[REDACTED:aws-secret]`),
+  `--mode mask` (`***`, no detector name leaked), or `--mode hash` (a stable per-secret hash, so
+  repeated occurrences of the same secret show the same token without revealing it).
+- **Per-detector toggles** — `safelog --disable email` leaves email addresses untouched;
+  `safelog --list-detectors` prints every name usable with `--disable`.
+- **Config file support** — a `safelog.toml` (or `--config PATH`) can add custom named patterns
+  and a list of disabled detectors; no config file present just falls back to the defaults.
+- **Zero dependencies.** Stdlib only. Works anywhere Python 3.9+ runs.
+
+## Usage
+
+```
+safelog --mode mask                       # replace every secret with ***
+safelog --mode hash                       # stable per-secret hash instead of a label
+safelog --disable email --disable ip      # leave those two detector types untouched
+safelog --list-detectors                  # print every detector name
+safelog --config ./safelog.toml           # load custom patterns / disabled list from a file
+```
+
+A config file looks like:
+
+```toml
+[patterns]
+internal-id = "INTERNAL-[0-9]{6}"
+
+[detectors]
+disabled = ["email", "ip"]
+```
+
 ## Planned features
 
-- **Streaming, not batch.** Reads stdin line-by-line (or in bounded chunks for lines without
-  trailing newlines), writes as it goes — safe to sit inline in a live `|` pipe.
-- **Regex detectors** for well-known secret shapes: AWS keys, GitHub/GitLab tokens, Stripe keys,
-  Slack tokens, private key blocks (`-----BEGIN ... PRIVATE KEY-----`), JWTs, emails, IPv4/IPv6.
 - **Entropy-based fallback detector** for the long tail: high-entropy tokens (generic API keys,
   passwords, hashes) that don't match a known vendor shape but look like secrets by Shannon
   entropy over a sliding window.
-- **Configurable redaction** — replace with a fixed placeholder, a labeled placeholder
-  (`[REDACTED:aws-secret]`), or a stable per-secret hash (so repeated occurrences of the same
-  secret are visibly the same token without revealing it).
-- **Allow/deny tuning** via CLI flags and an optional config file — disable a detector, raise or
-  lower the entropy threshold, add custom regex patterns.
-- **Zero dependencies.** Stdlib only. One file. Works anywhere Python 3 runs.
+- **Packaging to PyPI** so `pip install safelog` works, plus `--version`/`--help` polish and a
+  documented performance benchmark.
 
 ## Stack
 
@@ -60,8 +89,10 @@ Python 3, standard library only. No third-party runtime dependencies — dev-onl
 
 ## Status
 
-Early scaffold — see [`docs/VISION.md`](docs/VISION.md) for the design and
-[`docs/BACKLOG.md`](docs/BACKLOG.md) for the build plan.
+Core streaming redaction engine and detector coverage/configurability are implemented and
+tested — see [`docs/VISION.md`](docs/VISION.md) for the design,
+[`docs/BACKLOG.md`](docs/BACKLOG.md) for the build plan, and
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the code is organized.
 
 ## License
 

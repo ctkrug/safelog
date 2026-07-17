@@ -1,6 +1,7 @@
 """Command-line entrypoint: redact stdin, write to stdout, line by line."""
 
 import argparse
+import os
 import sys
 
 from . import __version__
@@ -84,6 +85,21 @@ def main(argv=None) -> int:
         detect_entropy=detect_entropy,
         entropy_threshold=args.entropy_threshold,
     )
+    try:
+        _stream_redacted(redactor)
+    except BrokenPipeError:
+        # A downstream consumer closed the pipe early (`safelog | head`,
+        # quitting a pager, an agent that stopped reading). Point stdout at
+        # /dev/null so the interpreter's final flush doesn't raise a second
+        # BrokenPipeError, then exit like any signalled pipe member (128+SIGPIPE).
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        return 141
+    return 0
+
+
+def _stream_redacted(redactor: Redactor) -> None:
+    """Redact each line off stdin and write it to stdout as it arrives."""
     for line in iter_stream_lines(sys.stdin.fileno()):
         out = redactor.process_line(line)
         if out is not None:
@@ -93,4 +109,3 @@ def main(argv=None) -> int:
     if trailing is not None:
         sys.stdout.write(trailing)
         sys.stdout.flush()
-    return 0

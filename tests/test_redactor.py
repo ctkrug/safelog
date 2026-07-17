@@ -58,3 +58,26 @@ def test_non_pem_lines_pass_through_the_normal_detectors():
     redactor = Redactor()
     out = redactor.process_line("2026-07-17T12:00:01Z INFO  starting worker\n")
     assert out == "2026-07-17T12:00:01Z INFO  starting worker\n"
+
+
+def test_single_line_pem_block_is_collapsed_not_leaked():
+    redactor = Redactor()
+    line = (
+        "before -----BEGIN RSA PRIVATE KEY----- "
+        "MIIEowIBAAKCAQEAtest1234567890abcdefghijklmnopqrstuvwxyz "
+        "-----END RSA PRIVATE KEY----- after\n"
+    )
+    out = redactor.process_line(line)
+    assert out == "before [REDACTED:private-key] after\n"
+    assert "MIIEowIBAAKCAQEA" not in out
+
+
+def test_single_line_pem_block_still_redacts_surrounding_secrets():
+    redactor = Redactor()
+    line = (
+        "jane@example.com -----BEGIN PRIVATE KEY----- "
+        "MIIEowIBAAKCAQEAtest1234567890abcdefghijklmnopqrstuvwxyz "
+        "-----END PRIVATE KEY----- 10.0.0.1\n"
+    )
+    out = redactor.process_line(line)
+    assert out == "[REDACTED:email] [REDACTED:private-key] [REDACTED:ip]\n"

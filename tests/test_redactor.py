@@ -72,6 +72,14 @@ def test_single_line_pem_block_is_collapsed_not_leaked():
     assert "MIIEowIBAAKCAQEA" not in out
 
 
+def test_detect_pem_false_leaves_pem_markers_untouched():
+    redactor = Redactor(detect_pem=False)
+    out = [redactor.process_line(line) for line in PEM_BLOCK]
+    assert all(o is not None for o in out)
+    assert out[0] == PEM_BLOCK[0]
+    assert out[3] == PEM_BLOCK[3]
+
+
 def test_single_line_pem_block_still_redacts_surrounding_secrets():
     redactor = Redactor()
     line = (

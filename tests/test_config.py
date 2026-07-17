@@ -35,6 +35,10 @@ def test_load_config_returns_empty_when_file_missing():
     assert load_config("/nonexistent/path/safelog.toml") == EMPTY_CONFIG
 
 
+def test_load_config_returns_empty_when_path_is_a_directory(tmp_path):
+    assert load_config(str(tmp_path)) == EMPTY_CONFIG
+
+
 def test_load_config_reads_a_real_file(tmp_path):
     config_path = tmp_path / "safelog.toml"
     config_path.write_text('[detectors]\ndisabled = ["ip"]\n')

@@ -3,6 +3,7 @@
 import argparse
 import sys
 
+from . import __version__
 from .config import load_config
 from .detectors import ALL_DETECTOR_NAMES, DETECTORS
 from .entropy import DEFAULT_THRESHOLD as DEFAULT_ENTROPY_THRESHOLD
@@ -16,6 +17,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="safelog",
         description="Redact secrets from a piped stream of logs or terminal output.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     parser.add_argument(
         "--mode",

@@ -42,7 +42,7 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
   - `safelog --disable email` leaves email addresses untouched while still redacting other types.
   - `safelog --list-detectors` prints every detector name usable with `--disable`.
 
-- [ ] **Config file support for custom patterns and detector toggles**
+- [x] **Config file support for custom patterns and detector toggles**
   - A config file (e.g. `safelog.toml`) defining a custom named regex causes matching text to be
     redacted under that name.
   - Running with no config file present falls back to built-in defaults with no error.

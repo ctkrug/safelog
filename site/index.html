@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Safelog - Keep secrets out of your AI agent's logs</title>
+  <meta name="description" content="Safelog is a zero-dependency CLI that redacts API keys, tokens, private keys, emails, and IPs from logs and terminal output in real time, before an AI agent ever reads them.">
+  <meta property="og:title" content="Safelog - Keep secrets out of your AI agent's logs">
+  <meta property="og:description" content="A zero-dependency filter you drop into any pipe. It redacts secrets from logs inline, one line at a time, before a stack trace reaches Claude, Cursor, or a screen-share.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0e14'/%3E%3Ctext x='6' y='22' font-family='monospace' font-size='15' font-weight='700' fill='%234ade80'%3E%3E_%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --surface-1: #111722;
+      --surface-2: #18202e;
+      --border: #243044;
+      --text: #e6edf3;
+      --muted: #8b98a5;
+      --accent: #4ade80;
+      --accent-dim: #22c55e;
+      --support: #fbbf24;
+      --danger: #f87171;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --ui: "Inter", system-ui, -apple-system, sans-serif;
+      --sp: 8px;
+      --radius: 10px;
+      --shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 12px 40px rgba(0,0,0,.5);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--ui);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    /* Background treatment: radial glow + scanlines + vignette, never a flat fill */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(900px 500px at 78% -8%, rgba(74,222,128,.10), transparent 60%),
+        radial-gradient(700px 500px at 0% 8%, rgba(251,191,36,.06), transparent 55%);
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px);
+      mix-blend-mode: overlay;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { width: 100%; max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+    /* ---- Nav ---- */
+    header {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(8px);
+      background: rgba(10,14,20,.72);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+    .wordmark { font-family: var(--mono); font-weight: 700; font-size: 19px; letter-spacing: -.5px; display: flex; align-items: center; gap: 2px; }
+    .wordmark .prompt { color: var(--accent); }
+    .wordmark .cursor { width: 9px; height: 18px; background: var(--accent); display: inline-block; margin-left: 4px; border-radius: 1px; animation: blink 1.1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .nav-links { display: flex; align-items: center; gap: 22px; font-size: 14px; }
+    .nav-links a.plain { color: var(--muted); }
+    .nav-links a.plain:hover { color: var(--text); text-decoration: none; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--ui); font-weight: 600; font-size: 15px;
+      padding: 11px 20px; border-radius: 8px; border: 1px solid transparent;
+      cursor: pointer; transition: transform .16s ease-out, background .16s ease-out, box-shadow .16s ease-out;
+    }
+    .btn-primary { background: var(--accent); color: #05230f; box-shadow: 0 6px 22px rgba(74,222,128,.28); }
+    .btn-primary:hover { background: var(--accent-dim); text-decoration: none; transform: translateY(-1px); box-shadow: 0 10px 30px rgba(74,222,128,.36); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-ghost { background: var(--surface-1); color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { background: var(--surface-2); text-decoration: none; border-color: #33425c; }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ---- Hero ---- */
+    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; padding: 72px 0 40px; }
+    .eyebrow { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: .5px; margin-bottom: 16px; }
+    h1 { font-family: var(--mono); font-weight: 700; font-size: clamp(30px, 4.6vw, 46px); line-height: 1.12; letter-spacing: -1px; margin-bottom: 18px; }
+    h1 .hl { color: var(--accent); }
+    .subhead { font-size: 18px; color: var(--muted); max-width: 60ch; margin-bottom: 28px; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+    .install {
+      font-family: var(--mono); font-size: 13.5px; color: var(--text);
+      background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 460px;
+    }
+    .install code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .install code .muted { color: var(--muted); }
+    .copy-btn {
+      font-family: var(--ui); font-size: 12px; font-weight: 600; color: var(--muted);
+      background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+      transition: color .16s, border-color .16s, background .16s; flex-shrink: 0;
+    }
+    .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .copy-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ---- Terminal ---- */
+    .terminal { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .term-bar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+    .term-title { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-left: 8px; }
+    .term-body { font-family: var(--mono); font-size: 13px; line-height: 1.75; padding: 16px 18px; min-height: 232px; }
+    .term-body .cmd { color: var(--muted); margin-bottom: 6px; }
+    .term-body .cmd .g { color: var(--accent); }
+    .logline { white-space: pre-wrap; word-break: break-all; opacity: 0; transform: translateY(4px); transition: opacity .2s ease-out, transform .2s ease-out; }
+    .logline.show { opacity: 1; transform: none; }
+    .lvl-INFO { color: #6ea8ff; } .lvl-ERROR { color: var(--danger); } .lvl-WARN { color: var(--support); }
+    .ts { color: var(--muted); }
+    .secret { color: var(--support); transition: color .2s; }
+    .secret.redacted {
+      color: var(--accent); background: var(--surface-2); border: 1px solid rgba(74,222,128,.35);
+      border-radius: 4px; padding: 0 4px; position: relative; overflow: hidden;
+    }
+    .secret.redacted::after {
+      content: ""; position: absolute; inset: 0; background: var(--accent); opacity: .85;
+      animation: wipe .45s ease-out forwards;
+    }
+    @keyframes wipe { from { transform: translateX(-101%); } to { transform: translateX(101%); } }
+
+    /* ---- Sections ---- */
+    section.block { padding: 56px 0; }
+    .section-head { max-width: 62ch; margin-bottom: 36px; }
+    .section-head h2 { font-family: var(--mono); font-size: 26px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 10px; }
+    .section-head p { color: var(--muted); }
+
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .feature { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; transition: transform .18s ease-out, border-color .18s ease-out; }
+    .feature:hover { transform: translateY(-3px); border-color: #33425c; }
+    .feature .fi { font-family: var(--mono); font-size: 13px; color: var(--accent); margin-bottom: 12px; }
+    .feature h3 { font-size: 17px; margin-bottom: 8px; }
+    .feature p { font-size: 14.5px; color: var(--muted); }
+
+    /* ---- Before / after ---- */
+    .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .ba .panel { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .ba .panel h4 { font-family: var(--mono); font-size: 12px; font-weight: 500; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .ba .panel.before h4 { color: var(--danger); }
+    .ba .panel.after h4 { color: var(--accent); }
+    .ba pre { font-family: var(--mono); font-size: 12.5px; line-height: 1.7; padding: 16px; overflow-x: auto; white-space: pre; }
+    .ba pre .red { color: var(--danger); }
+    .ba pre .grn { color: var(--accent); }
+    .ba pre .mut { color: var(--muted); }
+
+    /* ---- Usage ---- */
+    .usage { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .code-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .code-card h4 { font-family: var(--mono); font-size: 13px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+    .code-card pre { font-family: var(--mono); font-size: 12.5px; line-height: 1.85; padding: 16px; overflow-x: auto; white-space: pre; }
+    .code-card pre .c { color: var(--muted); } .code-card pre .g { color: var(--accent); }
+
+    /* ---- FAQ ---- */
+    .faq { max-width: 760px; }
+    details { border: 1px solid var(--border); border-radius: 8px; background: var(--surface-1); margin-bottom: 10px; overflow: hidden; }
+    summary { cursor: pointer; padding: 16px 18px; font-weight: 600; font-size: 15.5px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; font-family: var(--mono); color: var(--accent); font-size: 20px; transition: transform .2s; }
+    details[open] summary::after { transform: rotate(45deg); }
+    details .a { padding: 0 18px 16px; color: var(--muted); font-size: 15px; }
+    details .a a { color: var(--accent); }
+
+    /* ---- Footer ---- */
+    footer { border-top: 1px solid var(--border); padding: 40px 0; margin-top: 24px; }
+    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; color: var(--muted); font-size: 14px; }
+    .foot .more { color: var(--muted); }
+    .foot .more a { color: var(--accent); }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 32px; padding: 48px 0 24px; }
+      .features { grid-template-columns: 1fr; }
+      .ba, .usage { grid-template-columns: 1fr; }
+      .nav-links .nav-hide { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto; }
+      .wordmark .cursor { animation: none; }
+      .logline { transition: none; }
+      .secret.redacted::after { animation: none; display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <div class="wordmark"><span class="prompt">&gt;</span>safelog<span class="cursor"></span></div>
+      <nav class="nav-links">
+        <a class="plain nav-hide" href="#how">How it works</a>
+        <a class="plain nav-hide" href="#usage">Usage</a>
+        <a class="plain" href="#faq">FAQ</a>
+        <a class="btn btn-ghost" href="https://github.com/ctkrug/safelog">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">zero-dependency // stdlib only // one pipe</div>
+        <h1>Keep secrets out of your <span class="hl">AI agent's</span> logs.</h1>
+        <p class="subhead">Safelog is a filter you drop into any pipe. It redacts API keys, tokens, private keys, emails, and IPs inline, one line at a time, so the stack trace you paste into Claude or Cursor never carries a live credential.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/ctkrug/safelog">View on GitHub</a>
+          <a class="btn btn-ghost" href="#how">See it work</a>
+        </div>
+        <div class="install">
+          <code id="install-cmd"><span class="muted">$</span> pip install "git+https://github.com/ctkrug/safelog"</code>
+          <button class="copy-btn" id="copy-btn" aria-label="Copy install command">Copy</button>
+        </div>
+      </div>
+
+      <div class="terminal" id="how">
+        <div class="term-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="term-title">app.log &rarr; safelog</span>
+        </div>
+        <div class="term-body">
+          <div class="cmd">$ tail -f app.log <span class="g">| safelog</span></div>
+          <div id="term-lines" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="section-head">
+        <h2>What it does, and why it is different</h2>
+        <p>Secret scanners like gitleaks and truffleHog scan a repo at rest in a batch job. Safelog does the other thing: it sits inline in a live pipe and redacts as bytes flow through, fast enough that a human or an agent on the other end never notices.</p>
+      </div>
+      <div class="features">
+        <div class="feature">
+          <div class="fi">// streaming</div>
+          <h3>Sits in the pipe, not in your way</h3>
+          <p>Reads stdin and writes stdout as each line arrives, with flat memory use no matter how long the stream runs. Measured at 60 to 125ms of added latency per 1000 lines, so a live <code>tail -f</code> stays responsive.</p>
+        </div>
+        <div class="feature">
+          <div class="fi">// known shapes</div>
+          <h3>Knows secrets by their shape</h3>
+          <p>Regex detectors for AWS keys, GitHub, GitLab and Slack tokens, Stripe keys, JWTs, multi-line PEM private key blocks, emails, and IPv4/IPv6. It redacts only the secret and keeps the env var name and timestamp around it, so the log still reads.</p>
+        </div>
+        <div class="feature">
+          <div class="fi">// the long tail</div>
+          <h3>Catches the ones with no name</h3>
+          <p>A Shannon-entropy fallback flags high-entropy tokens that no pattern would recognize, like a generic API key or a password. It runs only where a regex found nothing, so it never double-redacts a match.</p>
+        </div>
+        <div class="feature">
+          <div class="fi">// auditable</div>
+          <h3>Small enough to read and trust</h3>
+          <p>Standard library only, no third-party dependencies. Vendor the package or install it in seconds. A tool that touches every byte of your logs should be short enough to read before you pipe secrets through it.</p>
+        </div>
+        <div class="feature">
+          <div class="fi">// modes</div>
+          <h3>Redact your way</h3>
+          <p><code>label</code> names what was removed (<code>[REDACTED:stripe-key]</code>), <code>mask</code> hides even that (<code>***</code>), and <code>hash</code> gives a stable per-secret token so you can spot repeats without ever seeing the value.</p>
+        </div>
+        <div class="feature">
+          <div class="fi">// configurable</div>
+          <h3>Tune it to your logs</h3>
+          <p>Disable any detector, add custom named patterns from a <code>safelog.toml</code>, or move the entropy threshold. Safe defaults mean <code>cmd | safelog</code> is useful with zero configuration.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="section-head">
+        <h2>One command, secrets gone</h2>
+        <p>The same five log lines before and after Safelog. Timestamps, log levels, and structure survive. Only the secret spans get replaced.</p>
+      </div>
+      <div class="ba">
+        <div class="panel before">
+          <h4>raw stream (secrets exposed)</h4>
+<pre><span class="mut">2026-07-17T12:00:01Z INFO</span>  starting worker pool=4
+<span class="mut">2026-07-17T12:00:02Z ERROR</span> AWS_SECRET_ACCESS_KEY=<span class="red">wJalrXUtnFEMIK7MDENGbP...</span>
+<span class="mut">2026-07-17T12:00:03Z ERROR</span> stripe key sk_test_<span class="red">NOTREALZZZ</span> rejected
+<span class="mut">2026-07-17T12:00:04Z WARN</span>  contact <span class="red">jane.doe@example.com</span> about quota
+<span class="mut">2026-07-17T12:00:05Z INFO</span>  client <span class="red">10.0.4.212</span> connected</pre>
+        </div>
+        <div class="panel after">
+          <h4>through safelog (secrets redacted)</h4>
+<pre><span class="mut">2026-07-17T12:00:01Z INFO</span>  starting worker pool=4
+<span class="mut">2026-07-17T12:00:02Z ERROR</span> AWS_SECRET_ACCESS_KEY=<span class="grn">[REDACTED:aws-secret]</span>
+<span class="mut">2026-07-17T12:00:03Z ERROR</span> stripe key sk_test_<span class="grn">[REDACTED:stripe-key]</span> rejected
+<span class="mut">2026-07-17T12:00:04Z WARN</span>  contact <span class="grn">[REDACTED:email]</span> about quota
+<span class="mut">2026-07-17T12:00:05Z INFO</span>  client <span class="grn">[REDACTED:ip]</span> connected</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="usage">
+      <div class="section-head">
+        <h2>Install and use</h2>
+        <p>No config needed to start. Add flags when you want to change modes or turn detectors off.</p>
+      </div>
+      <div class="usage">
+        <div class="code-card">
+          <h4>install</h4>
+<pre><span class="c"># install the CLI (Python 3.9+)</span>
+pip install <span class="g">"git+https://github.com/ctkrug/safelog"</span>
+
+<span class="c"># or run without installing, from a clone</span>
+python3 -m safelog &lt; app.log</pre>
+        </div>
+        <div class="code-card">
+          <h4>use it in a pipe</h4>
+<pre><span class="c"># live tail into an agent</span>
+tail -f app.log <span class="g">| safelog |</span> claude
+
+<span class="c"># scrub a command's output</span>
+some-cli --verbose 2&gt;&amp;1 <span class="g">| safelog</span>
+
+<span class="c"># mask instead of label; hide detector names</span>
+cat crash.txt <span class="g">| safelog --mode mask</span>
+
+<span class="c"># leave emails and IPs alone</span>
+safelog <span class="g">--disable email --disable ip</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="faq">
+      <div class="section-head">
+        <h2>Questions</h2>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>What is Safelog for?</summary>
+          <div class="a">Debugging with an AI agent now means piping your terminal, logs, or a crash dump into a model and asking what went wrong. That output often carries live secrets: a cloud key in a stack trace, a token from a <code>.env</code> that a debug print dumped, an internal IP, a customer email. Safelog sits between that output and the agent and redacts the secrets before they leave your machine. It also fits a screen-share, a support ticket, or anything you paste into chat.</div>
+        </details>
+        <details>
+          <summary>How is it different from gitleaks or truffleHog?</summary>
+          <div class="a">Those tools scan files and git history at rest and produce a report. That is a batch job. Safelog is built for the streaming case instead: standard input in, standard output out, one line at a time, low enough latency to sit in a live <code>|</code> pipe without you noticing it. Different problem, different tool.</div>
+        </details>
+        <details>
+          <summary>Will it slow down my terminal?</summary>
+          <div class="a">No. Safelog is line-oriented and only adds the cost of running its detectors over each line. Its own benchmark measures 60 to 125ms of added latency per 1000 lines on a mixed reference log, and the benchmark fails the build if that number goes past a stated budget.</div>
+        </details>
+        <details>
+          <summary>What secrets does it catch?</summary>
+          <div class="a">Out of the box: AWS access keys and secret keys, GitHub, GitLab and Slack tokens, Stripe keys, JWTs, PEM private key blocks (collapsed across however many lines they span), email addresses, and IPv4/IPv6 addresses. A Shannon-entropy pass then flags high-entropy tokens with no known vendor shape, so a generic 32-character API key still gets caught. Run <code>safelog --list-detectors</code> to see every name.</div>
+        </details>
+        <details>
+          <summary>Does it send my logs anywhere?</summary>
+          <div class="a">No. Safelog runs locally with the Python standard library and no third-party dependencies. It opens no network connections. The whole package is short enough to read start to finish before you trust it with a stream of secrets.</div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div>Safelog is open source under the MIT license. <a href="https://github.com/ctkrug/safelog">Read the source on GitHub</a>.</div>
+      <div class="more">More by Charlie Krug &rarr; <a href="https://apps.charliekrug.com">apps.charliekrug.com</a></div>
+    </div>
+  </footer>
+
+  <script>
+    // Copy the install command.
+    (function () {
+      var btn = document.getElementById("copy-btn");
+      var cmd = 'pip install "git+https://github.com/ctkrug/safelog"';
+      btn.addEventListener("click", function () {
+        navigator.clipboard.writeText(cmd).then(function () {
+          var was = btn.textContent;
+          btn.textContent = "Copied";
+          setTimeout(function () { btn.textContent = was; }, 1400);
+        });
+      });
+    })();
+
+    // Live redaction animation in the hero terminal.
+    (function () {
+      var host = document.getElementById("term-lines");
+      if (!host) return;
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Each line: timestamp, level, then parts. A part with a label is a secret
+      // and gets replaced by [REDACTED:label]; parts without one stay verbatim.
+      var LINES = [
+        { ts: "2026-07-17T12:00:01Z", lvl: "INFO",  parts: [{ t: " starting worker pool=4" }] },
+        { ts: "2026-07-17T12:00:02Z", lvl: "ERROR", parts: [{ t: " AWS_SECRET_ACCESS_KEY=" }, { t: "wJalrXUtnFEMIK7MDENGbPxRfiCY", label: "aws-secret" }] },
+        { ts: "2026-07-17T12:00:03Z", lvl: "ERROR", parts: [{ t: " stripe key sk_test_" }, { t: "NOTREALZZZ", label: "stripe-key" }, { t: " rejected" }] },
+        { ts: "2026-07-17T12:00:04Z", lvl: "WARN",  parts: [{ t: " contact " }, { t: "jane.doe@example.com", label: "email" }, { t: " about quota" }] },
+        { ts: "2026-07-17T12:00:05Z", lvl: "INFO",  parts: [{ t: " client " }, { t: "10.0.4.212", label: "ip" }, { t: " connected" }] }
+      ];
+
+      function buildLine(line) {
+        var div = document.createElement("div");
+        div.className = "logline";
+        var ts = document.createElement("span");
+        ts.className = "ts"; ts.textContent = line.ts + " ";
+        div.appendChild(ts);
+        var lvl = document.createElement("span");
+        lvl.className = "lvl-" + line.lvl; lvl.textContent = line.lvl;
+        div.appendChild(lvl);
+        var secrets = [];
+        line.parts.forEach(function (p) {
+          var span = document.createElement("span");
+          if (p.label) {
+            span.className = "secret";
+            span.textContent = p.t;
+            secrets.push({ span: span, label: p.label });
+          } else {
+            span.textContent = p.t;
+          }
+          div.appendChild(span);
+        });
+        return { div: div, secrets: secrets };
+      }
+
+      function reset() { host.innerHTML = ""; }
+
+      function run() {
+        reset();
+        LINES.forEach(function (line, i) {
+          var built = buildLine(line);
+          host.appendChild(built.div);
+          if (reduce) {
+            built.div.classList.add("show");
+            built.secrets.forEach(function (s) {
+              s.span.textContent = "[REDACTED:" + s.label + "]";
+              s.span.classList.add("redacted");
+            });
+            return;
+          }
+          setTimeout(function () {
+            built.div.classList.add("show");
+            setTimeout(function () {
+              built.secrets.forEach(function (s) {
+                s.span.textContent = "[REDACTED:" + s.label + "]";
+                s.span.classList.add("redacted");
+              });
+            }, 480);
+          }, 360 + i * 620);
+        });
+        if (!reduce) {
+          setTimeout(run, 360 + LINES.length * 620 + 2600);
+        }
+      }
+
+      run();
+    })();
+  </script>
+</body>
+</html>

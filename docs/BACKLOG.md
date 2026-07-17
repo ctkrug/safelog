@@ -11,12 +11,12 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
   - An automated test runs the CLI against `fixtures/sample.log` and asserts the exact redacted
     output byte-for-byte, so the demo can't silently regress.
 
-- [ ] **True line-buffered streaming (no whole-stream buffering)**
+- [x] **True line-buffered streaming (no whole-stream buffering)**
   - Piping a continuously-appended stream (e.g. `yes "line" | safelog`) produces redacted output
     continuously, not only after EOF.
   - Memory usage stays flat, not proportional to input size, when piping a multi-GB log file.
 
-- [ ] **Graceful handling of partial and very long lines**
+- [x] **Graceful handling of partial and very long lines**
   - A single line longer than 1MB with no newline is processed in bounded chunks without hanging
     or crashing.
   - A stream that ends without a trailing newline still flushes and redacts its final partial line.

@@ -48,14 +48,17 @@ class Redactor:
     number of ``process_line`` calls is still handled correctly.
     """
 
-    def __init__(self, detectors=DETECTORS, mode: str = DEFAULT_MODE):
+    def __init__(self, detectors=DETECTORS, mode: str = DEFAULT_MODE, detect_pem: bool = True):
         self.detectors = detectors
         self.mode = mode
+        self.detect_pem = detect_pem
         self._in_pem_block = False
         self._pem_buffer = []
 
     def process_line(self, line: str):
         """Return the redacted line, or ``None`` while buffering a PEM block."""
+        if not self.detect_pem:
+            return redact_line(line, self.detectors, self.mode)
         if self._in_pem_block:
             self._pem_buffer.append(line)
             if PEM_END_RE.search(line):

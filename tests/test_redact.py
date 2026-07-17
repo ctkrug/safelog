@@ -44,3 +44,10 @@ def test_redacts_jwt():
     line = "auth eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dQw4w9WgXcQ used\n"
     out = redact_line(line)
     assert "[REDACTED:jwt]" in out
+
+
+def test_redacts_gitlab_token():
+    line = "token glpat-" + "A" * 20 + " expired\n"
+    out = redact_line(line)
+    assert "[REDACTED:gitlab-token]" in out
+    assert "A" * 20 not in out

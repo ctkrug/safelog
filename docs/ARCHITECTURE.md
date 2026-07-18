@@ -72,7 +72,7 @@ missing file is not an error; it returns `EMPTY_CONFIG`.
 ## How to run it
 
 ```
-cat fixtures/sample.log | python3 -m safelog          # the wow-moment demo
+cat fixtures/sample.log | PYTHONPATH=src python3 -m safelog   # the wow-moment demo
 PYTHONPATH=src python3 -m pytest -q                   # run tests locally (no install needed)
 ruff check .                                          # lint
 PYTHONPATH=src python3 scripts/benchmark.py           # latency-overhead benchmark

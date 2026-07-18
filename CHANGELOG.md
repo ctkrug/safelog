@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `.gitleaks.toml`, allowlisting the known-fake secrets in `tests/`, `fixtures/`, and
+  `scripts/benchmark.py` that exercise safelog's own detectors, and a CI job that runs gitleaks on
+  every push and PR.
+- `[project.urls]` in `pyproject.toml` (Homepage, Repository, Issues, Changelog) for the PyPI
+  listing.
+
+### Fixed
+
+- `python3 -m safelog` in the README's wow-moment demo and no-install run path raised
+  `ModuleNotFoundError` from a bare clone; both now carry the `PYTHONPATH=src` the src-layout
+  package needs when it isn't installed. Same fix applied to `docs/ARCHITECTURE.md` and
+  `site/index.html`.
+- The hero terminal's `[REDACTED:...]` chip used a stray 4px border radius instead of the 6px
+  inline-chip token from `docs/DESIGN.md`.
+
 ## [1.0.0] - 2026-07-17
 
 ### Added

@@ -67,6 +67,32 @@ def test_bare_double_colon_is_not_flagged_as_ipv6():
     assert redact_line(line) == line
 
 
+def test_cpp_scope_resolution_is_not_flagged_as_ipv6():
+    # "std::vector", "core::fmt::Display" and "ActiveRecord::Base" all end a
+    # hex-letter identifier ("d", "e", "d") right before "::" — a naive
+    # compressed-form IPv6 match swallows just that trailing letter.
+    for line in (
+        "template<typename T> std::vector<T> make()\n",
+        "use core::fmt::Display as Fmt;\n",
+        "class Post < ActiveRecord::Base\n",
+    ):
+        assert redact_line(line) == line
+
+
+def test_redacts_ipv6_inside_url_brackets():
+    line = "connecting to http://[::1]:8080/health\n"
+    out = redact_line(line)
+    assert "[REDACTED:ip]" in out
+    assert "::1" not in out
+
+
+def test_redacts_bare_loopback_ipv6_after_whitespace():
+    line = "peer address ::1 accepted\n"
+    out = redact_line(line)
+    assert "[REDACTED:ip]" in out
+    assert " ::1 " not in out
+
+
 def test_long_at_free_line_does_not_trigger_quadratic_backtracking():
     # A long run of word characters with no "@" anywhere forces the email
     # detector's local-part backtracking on every starting offset; an

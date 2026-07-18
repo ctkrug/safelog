@@ -61,11 +61,20 @@ DETECTORS = [
     Detector(
         "ip",
         re.compile(
-            r"(?P<secret>"
+            # The compressed-form branches have an optional tail, so their
+            # minimal match is just one hex group plus "::" — e.g. the "d"
+            # before "::" in "std::vector" or "core::fmt::Display". A plain
+            # \b anchor doesn't help (hex letters are word chars, so there's
+            # no word/non-word transition inside "std"), so instead require
+            # the char immediately before/after the match to not itself be
+            # a hex digit or colon — that rejects a match starting or ending
+            # mid-identifier while still matching a bracketed URL literal
+            # like "[::1]" or a bare "::1" after whitespace.
+            r"(?<![A-Za-z0-9:])(?P<secret>"
             r"(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}"
             r"|(?:[A-Fa-f0-9]{1,4}:)+:(?:[A-Fa-f0-9]{1,4}(?::[A-Fa-f0-9]{1,4})*)?"
             r"|:(?::[A-Fa-f0-9]{1,4})+"
-            r")"
+            r")(?![A-Za-z0-9:])"
         ),
     ),
 ]

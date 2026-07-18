@@ -27,3 +27,5 @@ raw value no longer appears in the output.
 When adding an example secret to a fixture, test, or the README, keep it obviously fake (e.g. an
 all-caps placeholder rather than a realistic random string) — GitHub's push protection will block
 values that are structurally close enough to a real credential, even clearly-labeled test data.
+New fixture secrets under `tests/`, `fixtures/`, or `scripts/benchmark.py` are covered by the
+`.gitleaks.toml` allowlist; secrets added anywhere else are not, and shouldn't be.

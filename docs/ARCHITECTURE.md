@@ -46,12 +46,15 @@ stdin fd -> iter_stream_lines() -> Redactor.process_line() -> stdout
 4. `redact_line()` runs every enabled `Detector` (a `(name, compiled regex)`
    pair with a `secret` capture group) over the line in sequence, replacing
    only the captured span so surrounding context (an env var name, a key
-   prefix, a timestamp) stays visible. The IPv6 detector's compressed-form
-   branches (`::`) additionally guard against matching a hex-letter tail of
-   a larger identifier — e.g. the `d` in `std::` or `core::` — via a
-   lookbehind/lookahead requiring the character just outside the match not
-   be alphanumeric or `:`; a plain `\b` doesn't work there since hex letters
-   are word characters with no boundary between them.
+   prefix, a timestamp) stays visible. Every detector whose pattern starts
+   with a literal prefix (Stripe, GitHub, Slack, GitLab, AWS-key-id, JWT)
+   shares a `_NOT_IDENTIFIER_CHAR` lookbehind requiring the character just
+   before the prefix not be alphanumeric/`_` — otherwise the prefix also
+   opens a match inside an unrelated identifier that happens to contain it
+   (`desk_live_action`, `obj.keyJSON.parse.value`, `PAKIA...`). The IPv6
+   detector's compressed-form branches (`::`) need the same idea on both
+   sides of the match (hex letters are word characters, so a plain `\b`
+   doesn't create a boundary inside `std::`).
 5. `redact.format_replacement()` renders the placeholder according to
    `--mode`: `label` (`[REDACTED:<name>]`, default), `mask` (`***`, no
    detector name leaked), or `hash` (a stable 8-char hash of the secret

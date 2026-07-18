@@ -79,7 +79,16 @@ PYTHONPATH=src python3 scripts/benchmark.py           # latency-overhead benchma
 ```
 
 CI (`.github/workflows/ci.yml`) installs the package with `pip install -e ".[dev]"`
-and runs both `ruff check .` and `pytest -q` on Python 3.9 and 3.12.
+and runs both `ruff check .` and `pytest -q` on Python 3.9 and 3.12, plus a separate
+`secrets` job that runs gitleaks over the full commit history on every push and PR.
+
+## Secrets scanning
+
+`.gitleaks.toml` extends gitleaks' default ruleset with a path allowlist for `tests/`,
+`fixtures/`, and `scripts/benchmark.py` — the only places this repo intentionally contains
+secret-shaped strings, since they exist to exercise safelog's own detectors. Anywhere else,
+a gitleaks hit is real. `tests/test_gitleaks_config.py` guards the allowlist itself against
+silent drift.
 
 ## Benchmark
 

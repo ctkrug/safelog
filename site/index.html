@@ -191,6 +191,10 @@
       .features { grid-template-columns: 1fr; }
       .ba, .usage { grid-template-columns: 1fr; }
       .nav-links .nav-hide { display: none; }
+      /* Touch targets: the desktop-sized copy button and text nav links are
+         under the 44px minimum once there is no cursor to aim with. */
+      .copy-btn { min-height: 44px; padding: 5px 14px; }
+      .nav-links a.plain { display: inline-flex; align-items: center; min-height: 44px; }
     }
     @media (prefers-reduced-motion: reduce) {
       * { scroll-behavior: auto; }

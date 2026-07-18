@@ -34,7 +34,10 @@ def test_entropy_is_invariant_under_shuffling(s):
     chars = list(s)
     random.Random(0).shuffle(chars)
     shuffled = "".join(chars)
-    assert shannon_entropy(s) == shannon_entropy(shuffled)
+    # math.isclose, not ==: summing the same per-character terms in a
+    # different order (shuffling changes Counter's insertion order) is not
+    # guaranteed to be bit-identical under IEEE 754 float addition.
+    assert math.isclose(shannon_entropy(s), shannon_entropy(shuffled), rel_tol=1e-9, abs_tol=1e-12)
 
 
 @given(text, st.floats(min_value=0, max_value=8, allow_nan=False), st.integers(min_value=1, max_value=64))

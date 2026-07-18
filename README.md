@@ -118,6 +118,25 @@ PYTHONPATH=src python3 scripts/benchmark.py
 On the reference log it typically measures **60 to 125ms of added latency per 1000 lines**
 (well under the script's own 200ms/1000-line budget, which it fails the run if exceeded).
 
+## Limitations
+
+Safelog is a heuristic filter, not a guarantee. It reduces what leaks; it does not make a stream
+safe to publish. The failure modes worth knowing about:
+
+- **It matches shapes, not meaning.** A secret with no recognizable prefix and low entropy passes
+  straight through. `password=hunter2` and a four-word passphrase are both invisible to it.
+- **It works one line at a time.** A secret broken across two lines is never reassembled, so
+  neither half matches. PEM private key blocks are the one exception, tracked across lines by
+  design.
+- **Very long lines get chunked.** A line still unterminated after 1,000,000 bytes is emitted in
+  bounded chunks to keep memory flat, and a secret straddling a chunk boundary is split and missed.
+- **The entropy fallback needs length.** It only considers token-like runs of 32 characters or
+  more scoring above 4.3 bits per character. Lower `--entropy-threshold` if your secrets are less
+  random than that, and expect more false positives as you do.
+
+Treat it as a last line of defense rather than the only one. Not logging the secret in the first
+place still beats redacting it afterward.
+
 ## Roadmap
 
 - **Publish to PyPI** so `pip install safelog` works without the `git+` URL.

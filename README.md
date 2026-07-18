@@ -154,14 +154,24 @@ place still beats redacting it afterward.
 ## Stack
 
 Python 3, standard library only. No third-party runtime dependencies; dev-only tooling
-(`pytest`, `ruff`) lives in the `dev` extra.
+(`pytest`, `ruff`, `hypothesis`) lives in the `dev` extra.
 
-## Status
+## Development
 
-Core streaming redaction engine and detector coverage/configurability are implemented and
-tested. See [`docs/VISION.md`](docs/VISION.md) for the design,
-[`docs/BACKLOG.md`](docs/BACKLOG.md) for the build plan, and
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the code is organized.
+```
+git clone https://github.com/ctkrug/safelog && cd safelog
+pip install -e ".[dev]"
+
+pytest -q                                      # the test suite
+ruff check .                                   # lint
+PYTHONPATH=src python3 scripts/benchmark.py    # check the latency budget
+```
+
+CI runs the same three on Python 3.9 and 3.12, plus a gitleaks scan over the full history.
+
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) maps the modules and the data flow,
+[`CONTRIBUTING.md`](CONTRIBUTING.md) covers the conventions, and
+[`CHANGELOG.md`](CHANGELOG.md) tracks what changed in each release.
 
 ## License
 

@@ -79,6 +79,24 @@ def test_cpp_scope_resolution_is_not_flagged_as_ipv6():
         assert redact_line(line) == line
 
 
+def test_scope_resolution_before_non_word_char_is_not_flagged():
+    # Regression for the leading guard specifically: when the char after
+    # "::" isn't alphanumeric (a brace, a newline), only a lookbehind on the
+    # char *before* the match — not the trailing lookahead — rejects the
+    # "d::" fragment inside "std::".
+    line = "namespace std:: {\n"
+    assert redact_line(line) == line
+
+
+def test_double_colon_followed_by_identifier_is_not_flagged():
+    # Regression for the trailing guard specifically: "::1abc" alone fits
+    # the compressed-form branch (1abc is a valid 4-char hex group), so
+    # without a lookahead rejecting a following alnum char, the "xyz" tail
+    # of an ordinary identifier like "::1abcxyz" gets silently dropped.
+    line = "id ::1abcxyz done\n"
+    assert redact_line(line) == line
+
+
 def test_redacts_ipv6_inside_url_brackets():
     line = "connecting to http://[::1]:8080/health\n"
     out = redact_line(line)

@@ -48,6 +48,14 @@ def test_redacts_jwt():
     assert "[REDACTED:jwt]" in out
 
 
+def test_dotted_property_chain_containing_eyj_is_not_flagged_as_jwt():
+    # "keyJSON" contains the JWT literal prefix "eyJ" as a substring; a
+    # dotted call/property chain after it ("obj.keyJSON.parse.value") has
+    # the same two-dot shape as a real JWT and must not be mistaken for one.
+    line = "const keyJSON = obj.keyJSON.parse.value;\n"
+    assert redact_line(line) == line
+
+
 def test_redacts_gitlab_token():
     line = "token glpat-" + "A" * 20 + " expired\n"
     out = redact_line(line)

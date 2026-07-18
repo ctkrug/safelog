@@ -26,7 +26,7 @@ keys in a stack trace, a `.env` dump from a debug print, an internal IP an agent
 redaction tools assume a file on disk and a batch job. Safelog assumes a live pipe: stdin in,
 stdout out, one line at a time, low enough latency that it's invisible in an interactive session.
 
-It's a single Python file with no third-party dependencies. Read it, vendor it, trust it.
+It's under 500 lines of stdlib-only Python across eight small modules. Read it, vendor it, trust it.
 
 ## The wow moment
 

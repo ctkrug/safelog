@@ -6,7 +6,7 @@ no vibes. The first story of Epic 1 is the wow moment: it must land before anyth
 ## Epic 1 — Core streaming redaction engine
 
 - [x] **Wow moment: redact a log full of fake secrets, inline, in real time**
-  - `cat fixtures/sample.log | python3 -m safelog` redacts the AWS secret, Stripe key, email, and
+  - `cat fixtures/sample.log | PYTHONPATH=src python3 -m safelog` redacts the AWS secret, Stripe key, email, and
     IP while leaving timestamps and log levels untouched, matching the README demo output exactly.
   - An automated test runs the CLI against `fixtures/sample.log` and asserts the exact redacted
     output byte-for-byte, so the demo can't silently regress.

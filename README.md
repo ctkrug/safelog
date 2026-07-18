@@ -58,8 +58,8 @@ $ cat fixtures/sample.log | PYTHONPATH=src python3 -m safelog
   `safelog --list-detectors` prints every name usable with `--disable`.
 - **Config file support**: a `safelog.toml` (or `--config PATH`) can add custom named patterns
   and a list of disabled detectors; no config file present just falls back to the defaults.
-- **Entropy-based fallback detector** catches the long tail regex can't name (generic API keys,
-  passwords, and other high-entropy tokens with no recognizable vendor prefix) by scoring
+- **Entropy-based fallback detector** catches the long tail regex can't name (generic API keys and
+  other long, random-looking tokens with no recognizable vendor prefix) by scoring
   Shannon entropy over token-like substrings. Runs only where a regex detector found nothing, so
   it never re-flags or corrupts an already-redacted secret. Tune sensitivity with
   `--entropy-threshold`, or disable it entirely with `--disable high-entropy`.

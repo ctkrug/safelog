@@ -70,7 +70,7 @@ isn't an option.
 - The entropy-based fallback detector is implemented, tunable, and demonstrably catches at least
   one class of secret none of the regex detectors would (e.g., a generic 32-char API key with no
   recognizable prefix).
-- `cat fixtures/sample.log | safelog` reproduces the README's wow-moment demo exactly, and that
+- `cat fixtures/sample.log | safelog` reproduces the README's sample-log demo exactly, and that
   demo is exercised by an automated test so it can't silently regress.
 - The CLI supports redaction-mode selection (labeled placeholder vs. fixed mask vs. stable hash)
   and per-detector enable/disable via flags.

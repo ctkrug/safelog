@@ -13,7 +13,7 @@ EXPECTED = (
 )
 
 
-def test_wow_moment_matches_readme_demo_byte_for_byte():
+def test_sample_demo_matches_readme_byte_for_byte():
     result = subprocess.run(
         [sys.executable, "-m", "safelog"],
         stdin=FIXTURE.open("rb"),

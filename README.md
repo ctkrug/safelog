@@ -28,7 +28,7 @@ stdout out, one line at a time, low enough latency that it's invisible in an int
 
 It's under 500 lines of stdlib-only Python across eight small modules. Read it, vendor it, trust it.
 
-## The wow moment
+## See it work
 
 Pipe a log file full of fake API keys and stack traces through `safelog` and watch every secret
 get redacted inline, in real time, while everything else (timestamps, stack frames, log

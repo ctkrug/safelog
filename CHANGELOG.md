@@ -17,7 +17,7 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- `python3 -m safelog` in the README's wow-moment demo and no-install run path raised
+- `python3 -m safelog` in the README's sample-log demo and no-install run path raised
   `ModuleNotFoundError` from a bare clone; both now carry the `PYTHONPATH=src` the src-layout
   package needs when it isn't installed. Same fix applied to `docs/ARCHITECTURE.md` and
   `site/index.html`.

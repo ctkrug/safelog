@@ -1,0 +1,19 @@
+title = "safelog gitleaks config"
+
+# Safelog is a secret-REDACTION tool: its tests and fixtures necessarily contain
+# realistic-looking fake secrets to exercise every detector end to end. Every
+# value allowlisted below is a documented placeholder — AWS's own published
+# example access key, Stripe's "NOTREAL" test prefix, the canonical jwt.io demo
+# token, RFC 2606 example.com addresses — never a live credential. Source code
+# and docs are deliberately excluded from this allowlist.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known-fake secrets in test fixtures/scripts used to exercise safelog's own detectors"
+paths = [
+  '''^tests/.*''',
+  '''^fixtures/.*''',
+  '''^scripts/benchmark\.py$''',
+]

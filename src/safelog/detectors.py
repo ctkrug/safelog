@@ -14,6 +14,15 @@ class Detector(NamedTuple):
     pattern: Pattern
 
 
+# Prefix detectors below share one flaw class: a bare literal prefix has no
+# boundary check, so it also opens a match when the literal happens to
+# appear inside an ordinary identifier — e.g. "sk_live_" inside
+# "desk_live_action", or "AKIA" inside "PAKIA...". Each pattern requires the
+# character just before the prefix not be part of an identifier (real
+# secrets are always preceded by whitespace, a quote, "=", ":", or similar,
+# never glued to another word character).
+_NOT_IDENTIFIER_CHAR = r"(?<![A-Za-z0-9_])"
+
 DETECTORS = [
     Detector(
         "aws-secret",
@@ -21,32 +30,27 @@ DETECTORS = [
     ),
     Detector(
         "aws-key-id",
-        re.compile(r"(?P<secret>AKIA[0-9A-Z]{16})"),
+        re.compile(_NOT_IDENTIFIER_CHAR + r"(?P<secret>AKIA[0-9A-Z]{16})"),
     ),
     Detector(
         "stripe-key",
-        re.compile(r"sk_(?:live|test)_(?P<secret>[A-Za-z0-9]{10,})"),
+        re.compile(_NOT_IDENTIFIER_CHAR + r"sk_(?:live|test)_(?P<secret>[A-Za-z0-9]{10,})"),
     ),
     Detector(
         "github-token",
-        re.compile(r"(?P<secret>gh[pousr]_[A-Za-z0-9]{36,255})"),
+        re.compile(_NOT_IDENTIFIER_CHAR + r"(?P<secret>gh[pousr]_[A-Za-z0-9]{36,255})"),
     ),
     Detector(
         "slack-token",
-        re.compile(r"(?P<secret>xox[baprs]-[A-Za-z0-9-]{10,})"),
+        re.compile(_NOT_IDENTIFIER_CHAR + r"(?P<secret>xox[baprs]-[A-Za-z0-9-]{10,})"),
     ),
     Detector(
         "gitlab-token",
-        re.compile(r"(?P<secret>glpat-[A-Za-z0-9_-]{20,})"),
+        re.compile(_NOT_IDENTIFIER_CHAR + r"(?P<secret>glpat-[A-Za-z0-9_-]{20,})"),
     ),
     Detector(
         "jwt",
-        # "eyJ" (base64 for '{"') is a literal, unanchored prefix — without
-        # a guard it also opens inside an ordinary identifier that happens
-        # to contain it, e.g. "keyJSON" in "obj.keyJSON.parse.value", which
-        # has the same two-dot shape as a real token. Require the preceding
-        # char not be part of an identifier.
-        re.compile(r"(?<![A-Za-z0-9_])(?P<secret>eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)"),
+        re.compile(_NOT_IDENTIFIER_CHAR + r"(?P<secret>eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)"),
     ),
     Detector(
         "email",

@@ -28,6 +28,10 @@ adheres to [Semantic Versioning](https://semver.org/).
   `st[REDACTED:ip]vector`, and `core::fmt::Display`/`ActiveRecord::Base` broke the same way. Now
   guarded by a lookbehind/lookahead requiring the character just outside the match not be
   alphanumeric or `:`.
+- The Stripe, GitHub, Slack, GitLab, AWS-key-id, and JWT detectors all matched their literal
+  prefix wherever it appeared, including inside an unrelated identifier (`desk_live_action`,
+  `obj.keyJSON.parse.value`, `PAKIA...`), silently mangling ordinary code and log lines. Each now
+  requires the character immediately before the prefix not be part of an identifier.
 
 ## [1.0.0] - 2026-07-17
 

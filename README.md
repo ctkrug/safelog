@@ -35,7 +35,7 @@ get redacted inline, in real time, while everything else (timestamps, stack fram
 levels) passes through untouched.
 
 ```
-$ cat fixtures/sample.log | python3 -m safelog
+$ cat fixtures/sample.log | PYTHONPATH=src python3 -m safelog
 2026-07-17T12:00:01Z INFO  starting worker pool=4
 2026-07-17T12:00:02Z ERROR AWS_SECRET_ACCESS_KEY=[REDACTED:aws-secret]
 2026-07-17T12:00:03Z ERROR stripe key sk_test_[REDACTED:stripe-key] rejected
@@ -77,11 +77,12 @@ Or run it straight from a clone, no install needed:
 
 ```
 git clone https://github.com/ctkrug/safelog
-python3 -m safelog < app.log
+cd safelog
+PYTHONPATH=src python3 -m safelog < app.log
 ```
 
 Because it is one stdlib-only package, you can also vendor `src/safelog/` into a project and call
-`python3 -m safelog` with nothing to install.
+`PYTHONPATH=src python3 -m safelog` with nothing to install.
 
 ## Usage
 

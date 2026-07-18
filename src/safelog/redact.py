@@ -35,8 +35,19 @@ def redact_line(line: str, detectors=DETECTORS, mode: str = DEFAULT_MODE) -> str
 
 def _replacer(name: str, mode: str):
     def replace(match) -> str:
+        # Splice by offset, not by value: substituting the secret's *text*
+        # across the match also rewrites any surrounding context that happens
+        # to read the same (a detector matching "tok (?P<secret>[a-z]+)" over
+        # "tok tok" would redact both words). Only the captured span may go.
         secret = match.group("secret")
-        return match.group(0).replace(secret, format_replacement(mode, name, secret))
+        whole_start = match.start()
+        secret_start, secret_end = match.span("secret")
+        whole = match.group(0)
+        return (
+            whole[: secret_start - whole_start]
+            + format_replacement(mode, name, secret)
+            + whole[secret_end - whole_start :]
+        )
 
     return replace
 

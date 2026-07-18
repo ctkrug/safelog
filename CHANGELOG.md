@@ -23,6 +23,11 @@ adheres to [Semantic Versioning](https://semver.org/).
   `site/index.html`.
 - The hero terminal's `[REDACTED:...]` chip used a stray 4px border radius instead of the 6px
   inline-chip token from `docs/DESIGN.md`.
+- The IPv6 detector's compressed-form (`::`) branches were unanchored, so any hex-letter tail of
+  a larger identifier before `::` matched as a fragment of an address — e.g. `std::vector` became
+  `st[REDACTED:ip]vector`, and `core::fmt::Display`/`ActiveRecord::Base` broke the same way. Now
+  guarded by a lookbehind/lookahead requiring the character just outside the match not be
+  alphanumeric or `:`.
 
 ## [1.0.0] - 2026-07-17
 

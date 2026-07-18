@@ -46,7 +46,12 @@ stdin fd -> iter_stream_lines() -> Redactor.process_line() -> stdout
 4. `redact_line()` runs every enabled `Detector` (a `(name, compiled regex)`
    pair with a `secret` capture group) over the line in sequence, replacing
    only the captured span so surrounding context (an env var name, a key
-   prefix, a timestamp) stays visible.
+   prefix, a timestamp) stays visible. The IPv6 detector's compressed-form
+   branches (`::`) additionally guard against matching a hex-letter tail of
+   a larger identifier — e.g. the `d` in `std::` or `core::` — via a
+   lookbehind/lookahead requiring the character just outside the match not
+   be alphanumeric or `:`; a plain `\b` doesn't work there since hex letters
+   are word characters with no boundary between them.
 5. `redact.format_replacement()` renders the placeholder according to
    `--mode`: `label` (`[REDACTED:<name>]`, default), `mask` (`***`, no
    detector name leaked), or `hash` (a stable 8-char hash of the secret

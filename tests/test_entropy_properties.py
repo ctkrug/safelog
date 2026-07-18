@@ -40,7 +40,11 @@ def test_entropy_is_invariant_under_shuffling(s):
     assert math.isclose(shannon_entropy(s), shannon_entropy(shuffled), rel_tol=1e-9, abs_tol=1e-12)
 
 
-@given(text, st.floats(min_value=0, max_value=8, allow_nan=False), st.integers(min_value=1, max_value=64))
+@given(
+    text,
+    st.floats(min_value=0, max_value=8, allow_nan=False),
+    st.integers(min_value=1, max_value=64),
+)
 def test_every_flagged_token_actually_clears_the_bar(line, threshold, min_length):
     for match in find_high_entropy_tokens(line, threshold=threshold, min_length=min_length):
         token = match.group(0)

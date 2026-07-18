@@ -41,7 +41,11 @@ def _replacer(name: str, mode: str):
     return replace
 
 
-def redact_entropy(line: str, mode: str = DEFAULT_MODE, threshold: float = DEFAULT_ENTROPY_THRESHOLD) -> str:
+def redact_entropy(
+    line: str,
+    mode: str = DEFAULT_MODE,
+    threshold: float = DEFAULT_ENTROPY_THRESHOLD,
+) -> str:
     """Replace high-entropy token-like substrings the regex detectors missed.
 
     Runs on ``line`` *after* regex substitution, so already-redacted spans

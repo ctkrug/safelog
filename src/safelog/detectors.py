@@ -50,7 +50,10 @@ DETECTORS = [
     ),
     Detector(
         "jwt",
-        re.compile(_NOT_IDENTIFIER_CHAR + r"(?P<secret>eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)"),
+        re.compile(
+            _NOT_IDENTIFIER_CHAR
+            + r"(?P<secret>eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)"
+        ),
     ),
     Detector(
         "email",

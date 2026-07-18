@@ -53,7 +53,7 @@ def _build_parser() -> argparse.ArgumentParser:
         type=float,
         default=DEFAULT_ENTROPY_THRESHOLD,
         metavar="FLOAT",
-        help="Shannon-entropy bits/char required to flag a token as a secret (default: %(default)s)",
+        help="entropy bits/char required to flag a token as a secret (default: %(default)s)",
     )
     return parser
 

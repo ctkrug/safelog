@@ -29,3 +29,9 @@ where = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+
+[tool.ruff.lint]
+# Ruff's default selection is only E4/E7/E9 + F, which leaves the line-length
+# above unenforced. Name the rules explicitly so `ruff check` actually holds
+# the line: pycodestyle (incl. E501), pyflakes, import order, pyupgrade, bugbear.
+select = ["E", "F", "I", "UP", "B"]

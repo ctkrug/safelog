@@ -29,7 +29,9 @@ def test_regex_match_and_adjacent_high_entropy_text_both_redact_cleanly():
     line = f"stripe key sk_test_NOTREALZZZ and also {RANDOM_SECRET} nearby\n"
     redactor = Redactor()
     out = redactor.process_line(line)
-    assert out == "stripe key sk_test_[REDACTED:stripe-key] and also [REDACTED:high-entropy] nearby\n"
+    assert out == (
+        "stripe key sk_test_[REDACTED:stripe-key] and also [REDACTED:high-entropy] nearby\n"
+    )
 
 
 def test_entropy_threshold_is_configurable_on_redactor():

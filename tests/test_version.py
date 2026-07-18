@@ -16,5 +16,12 @@ def test_help_flag_documents_every_flag(capsys):
         main(["--help"])
     assert exc_info.value.code == 0
     help_text = capsys.readouterr().out
-    for flag in ("--mode", "--disable", "--list-detectors", "--config", "--entropy-threshold", "--version"):
+    for flag in (
+        "--mode",
+        "--disable",
+        "--list-detectors",
+        "--config",
+        "--entropy-threshold",
+        "--version",
+    ):
         assert flag in help_text

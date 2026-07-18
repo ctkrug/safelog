@@ -22,7 +22,11 @@ def shannon_entropy(data: str) -> float:
     return -sum((n / length) * math.log2(n / length) for n in counts.values())
 
 
-def find_high_entropy_tokens(line: str, threshold: float = DEFAULT_THRESHOLD, min_length: int = MIN_TOKEN_LENGTH):
+def find_high_entropy_tokens(
+    line: str,
+    threshold: float = DEFAULT_THRESHOLD,
+    min_length: int = MIN_TOKEN_LENGTH,
+):
     """Yield regex ``Match`` objects for token-like substrings scoring above ``threshold``.
 
     Candidates are contiguous runs of token-ish characters (letters, digits,

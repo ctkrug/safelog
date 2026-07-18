@@ -33,7 +33,8 @@ def test_uuid_is_not_flagged_at_default_threshold():
 
 
 def test_file_path_is_not_flagged_at_default_threshold():
-    assert list(find_high_entropy_tokens(f"loading module from {FILE_PATH}", DEFAULT_THRESHOLD)) == []
+    line = f"loading module from {FILE_PATH}"
+    assert list(find_high_entropy_tokens(line, DEFAULT_THRESHOLD)) == []
 
 
 def test_common_english_sentence_is_not_flagged():

@@ -12,7 +12,7 @@ this implements just the subset of TOML the config file needs:
 """
 
 import re
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from .detectors import Detector
 
@@ -23,8 +23,8 @@ _STRING_ITEM_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 
 
 class Config(NamedTuple):
-    custom_detectors: List[Detector]
-    disabled_detectors: List[str]
+    custom_detectors: list[Detector]
+    disabled_detectors: list[str]
 
 
 EMPTY_CONFIG = Config(custom_detectors=[], disabled_detectors=[])

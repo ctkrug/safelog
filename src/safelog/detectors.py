@@ -6,12 +6,12 @@ redacted output — only the group itself gets replaced.
 """
 
 import re
-from typing import NamedTuple, Pattern
+from typing import NamedTuple
 
 
 class Detector(NamedTuple):
     name: str
-    pattern: Pattern
+    pattern: re.Pattern
 
 
 # Prefix detectors below share one flaw class: a bare literal prefix has no

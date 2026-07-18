@@ -12,7 +12,7 @@ memory usage without limit — it is yielded in fixed-size chunks instead.
 
 import codecs
 import os
-from typing import Iterator
+from collections.abc import Iterator
 
 DEFAULT_CHUNK_SIZE = 65536
 DEFAULT_MAX_LINE_BYTES = 1_000_000

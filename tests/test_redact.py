@@ -1,5 +1,7 @@
+import re
 import time
 
+from safelog.detectors import Detector
 from safelog.redact import redact_line
 
 
@@ -163,3 +165,11 @@ def test_long_at_free_line_does_not_trigger_quadratic_backtracking():
     start = time.monotonic()
     redact_line(line)
     assert time.monotonic() - start < 2.0
+
+
+def test_only_the_captured_span_is_replaced_not_every_copy_of_its_text():
+    # The replacement used to substitute the secret *by value* across the
+    # whole match, so leading context that happened to read the same as the
+    # secret was redacted too. Only the captured span may be replaced.
+    detectors = [Detector("dup", re.compile(r"tok (?P<secret>[a-z]+)"))]
+    assert redact_line("tok tok", detectors) == "tok [REDACTED:dup]"

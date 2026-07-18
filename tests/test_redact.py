@@ -22,6 +22,14 @@ def test_redacts_stripe_key_but_keeps_prefix():
     assert "NOTREALZZZ" not in out
 
 
+def test_identifier_ending_in_stripe_prefix_is_not_flagged():
+    # "sk_live_"/"sk_test_" are literal substrings with no boundary check,
+    # so a variable name like "desk_live_actionXYZ123" opens a match right
+    # where the literal happens to appear inside it.
+    line = "desk_live_actionXYZ123 rest\n"
+    assert redact_line(line) == line
+
+
 def test_redacts_email():
     line = "contact jane.doe@example.com about quota\n"
     out = redact_line(line)
@@ -40,6 +48,13 @@ def test_redacts_github_token():
     line = "token ghp_" + "A" * 36 + " expired\n"
     out = redact_line(line)
     assert "[REDACTED:github-token]" in out
+
+
+def test_identifier_ending_in_github_prefix_is_not_flagged():
+    # "ghp_"/"gho_"/"ghu_"/"ghs_"/"ghr_" are unanchored, so a word ending in
+    # one of those 4-char sequences opens a match mid-identifier.
+    line = "thighp_used" + "A" * 40 + " context\n"
+    assert redact_line(line) == line
 
 
 def test_redacts_jwt():
@@ -61,6 +76,26 @@ def test_redacts_gitlab_token():
     out = redact_line(line)
     assert "[REDACTED:gitlab-token]" in out
     assert "A" * 20 not in out
+
+
+def test_identifier_ending_in_gitlab_prefix_is_not_flagged():
+    # "glpat-" is a literal substring with no boundary check.
+    line = "not_a_glpat-realtokenabcdefghij1234 here\n"
+    assert redact_line(line) == line
+
+
+def test_identifier_ending_in_slack_prefix_is_not_flagged():
+    # "xox[baprs]-" is unanchored, so a word containing that 5-char
+    # sequence opens a match mid-identifier.
+    line = "a boxoxb-officechair here\n"
+    assert redact_line(line) == line
+
+
+def test_identifier_ending_in_aws_key_id_prefix_is_not_flagged():
+    # "AKIA" has no boundary check either — a single leading letter that
+    # happens to be uppercase merges into what looks like a valid key id.
+    line = "PAKIA1234567890123456 rest\n"
+    assert redact_line(line) == line
 
 
 def test_redacts_ipv6():

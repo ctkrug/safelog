@@ -105,6 +105,16 @@ internal-id = "INTERNAL-[0-9]{6}"
 disabled = ["email", "ip"]
 ```
 
+## Exit codes
+
+Safelog is meant to sit in a pipe, so it exits the way the other tools in that pipe do:
+
+| Code | Meaning |
+|------|---------|
+| `0`  | Stream redacted to EOF, or `--version`/`--list-detectors` printed and exited |
+| `2`  | Bad arguments (argparse) |
+| `141`| A downstream reader closed the pipe early (`safelog \| head`, quitting a pager), which is `128 + SIGPIPE`, the same code `cat` or `grep` would give |
+
 ## Performance
 
 Safelog is line-oriented and adds only the cost of running its detectors over each line.

@@ -41,7 +41,12 @@ DETECTORS = [
     ),
     Detector(
         "jwt",
-        re.compile(r"(?P<secret>eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)"),
+        # "eyJ" (base64 for '{"') is a literal, unanchored prefix — without
+        # a guard it also opens inside an ordinary identifier that happens
+        # to contain it, e.g. "keyJSON" in "obj.keyJSON.parse.value", which
+        # has the same two-dot shape as a real token. Require the preceding
+        # char not be part of an identifier.
+        re.compile(r"(?<![A-Za-z0-9_])(?P<secret>eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)"),
     ),
     Detector(
         "email",

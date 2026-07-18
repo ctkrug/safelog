@@ -21,6 +21,30 @@ def test_hex_tail_of_an_identifier_before_double_colon_is_never_flagged(rest, he
     assert f"{prefix}{hexrun}::" in redact_line(line)
 
 
+identifier_char = st.sampled_from(string.ascii_letters + string.digits + "_")
+prefix_detector_secret_shape = st.sampled_from(
+    [
+        "AKIA" + "A" * 16,
+        "sk_live_" + "a" * 10,
+        "ghp_" + "A" * 36,
+        "xoxb-" + "a" * 10,
+        "glpat-" + "a" * 20,
+        "eyJ" + "a" + "." + "b" + "." + "c",
+    ]
+)
+
+
+@given(identifier_char, prefix_detector_secret_shape)
+def test_identifier_char_directly_before_any_prefix_secret_blocks_the_match(ch, secret_shape):
+    # Generalizes the individual desk_live_/thighp_/PAKIA.../keyJSON
+    # regressions in test_redact.py: none of the six literal-prefix
+    # detectors (Stripe, GitHub, Slack, GitLab, AWS-key-id, JWT) should
+    # match when their prefix is directly glued to a preceding identifier
+    # character, regardless of which detector or which identifier char.
+    line = f"{ch}{secret_shape} tail\n"
+    assert redact_line(line) == line
+
+
 @given(ipv6_int)
 def test_any_valid_ipv6_address_between_delimiters_is_redacted(as_int):
     address = str(ipaddress.IPv6Address(as_int))

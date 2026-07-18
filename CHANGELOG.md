@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.1] - 2026-07-18
 
 ### Added
 
@@ -32,6 +32,25 @@ adheres to [Semantic Versioning](https://semver.org/).
   prefix wherever it appeared, including inside an unrelated identifier (`desk_live_action`,
   `obj.keyJSON.parse.value`, `PAKIA...`), silently mangling ordinary code and log lines. Each now
   requires the character immediately before the prefix not be part of an identifier.
+- Redaction substituted the secret's *text* across the whole match, so context inside the match
+  that happened to read the same as the secret was replaced too. The built-in detectors cannot
+  trigger it (their literal prefixes can never equal the bounded secret), but a custom `Detector`
+  can. Replacement now splices on the captured span's offsets.
+- The landing page's copy button and text navigation links sat below the 44px touch-target
+  minimum on phone widths.
+
+### Changed
+
+- `ruff check` now selects an explicit rule set (`E`, `F`, `I`, `UP`, `B`). Ruff's default
+  selection omits `E501`, so the `line-length = 100` already declared in `pyproject.toml` had
+  never actually been enforced and eight lines had drifted past it.
+- The distribution version is derived from `safelog.__version__` instead of being repeated in
+  `pyproject.toml`, so a release cannot bump one and leave `safelog --version` reporting the other.
+- Type hints use PEP 585 builtin generics (`list[...]`, `re.Pattern`, `collections.abc.Iterator`),
+  all available on the project's Python 3.9 floor.
+- The README documents the CLI's exit codes and, in a new limitations section, the four cases
+  where redaction does not catch a secret. Internal "wow moment" phrasing was removed from the
+  public docs and test names.
 
 ## [1.0.0] - 2026-07-17
 
